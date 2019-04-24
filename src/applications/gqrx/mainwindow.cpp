@@ -1125,7 +1125,7 @@ void MainWindow::setFmMaxdev(float max_dev)
     rx->set_fm_maxdev(max_dev);
 
     // update widgets
-    uiDockRxOpt->setMaxDev(d_hw_freq);
+    uiDockRxOpt->setMaxDev(max_dev);
 }
 
 
@@ -2284,6 +2284,7 @@ void MainWindow::on_actionAddBookmark_triggered()
         info.frequency = ui->freqCtrl->getFrequency();
         info.bandwidth = ui->plotter->getFilterBw();
         info.modulation = uiDockRxOpt->currentDemodAsString();
+        info.deviation = uiDockRxOpt->currentMaxdev();
         info.name=name;
         QStringList listTags = tags.split(",",QString::SkipEmptyParts);
         info.tags.clear();
