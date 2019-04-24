@@ -64,11 +64,13 @@ struct BookmarkInfo
     QString modulation;
     qint64  bandwidth;
     QList<TagInfo*> tags;
+    int  deviation;
 
     BookmarkInfo()
     {
         this->frequency = 0;
         this->bandwidth = 0;
+        this->deviation = -1;
     }
 
 /*    BookmarkInfo( qint64 frequency, QString name, qint64 bandwidth, QString modulation )

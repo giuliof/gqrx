@@ -57,6 +57,8 @@
 
 #include "qtgui/bookmarkstaglist.h"
 
+#include "qtgui/demod_options.h"
+
 MainWindow::MainWindow(const QString cfgfile, bool edit_conf, QWidget *parent) :
     QMainWindow(parent),
     configOk(true),
@@ -250,7 +252,7 @@ MainWindow::MainWindow(const QString cfgfile, bool edit_conf, QWidget *parent) :
     connect(uiDockRDS, SIGNAL(rdsDecoderToggled(bool)), this, SLOT(setRdsDecoder(bool)));
 
     // Bookmarks
-    connect(uiDockBookmarks, SIGNAL(newBookmarkActivated(qint64, QString, int)), this, SLOT(onBookmarkActivated(qint64, QString, int)));
+    connect(uiDockBookmarks, SIGNAL(newBookmarkActivated(qint64, QString, int, int)), this, SLOT(onBookmarkActivated(qint64, QString, int, int)));
     connect(uiDockBookmarks->actionAddBookmark, SIGNAL(triggered()), this, SLOT(on_actionAddBookmark_triggered()));
 
 
@@ -1028,7 +1030,7 @@ void MainWindow::selectDemod(int mode_idx)
         ui->plotter->setDemodRanges(-40000, -1000, 1000, 40000, true);
         uiDockAudio->setFftRange(0, 5000);
         rx->set_demod(receiver::RX_DEMOD_NFM);
-        rx->set_fm_maxdev(uiDockRxOpt->currentMaxdev());
+        //rx->set_fm_maxdev(uiDockRxOpt->currentMaxdev());
         rx->set_fm_deemph(uiDockRxOpt->currentEmph());
         click_res = 100;
         break;
@@ -1119,8 +1121,11 @@ void MainWindow::setFmMaxdev(float max_dev)
 {
     qDebug() << "FM MAX_DEV: " << max_dev;
 
-    /* receiver will check range */
+    // set receiver maxdev
     rx->set_fm_maxdev(max_dev);
+
+    // update widgets
+    uiDockRxOpt->setMaxDev(d_hw_freq);
 }
 
 
@@ -2048,11 +2053,13 @@ void MainWindow::setRdsDecoder(bool checked)
     }
 }
 
-void MainWindow::onBookmarkActivated(qint64 freq, QString demod, int bandwidth)
+void MainWindow::onBookmarkActivated(qint64 freq, QString demod, int deviation, int bandwidth)
 {
     setNewFrequency(freq);
+    if (deviation > 0)
+        setFmMaxdev(deviation);
     selectDemod(demod);
-
+    
     /* Check if filter is symmetric or not by checking the presets */
     int mode = uiDockRxOpt->currentDemod();
     int preset = uiDockRxOpt->currentFilterShape();

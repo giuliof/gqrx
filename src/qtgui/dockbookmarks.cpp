@@ -104,7 +104,7 @@ DockBookmarks::~DockBookmarks()
 void DockBookmarks::activated(const QModelIndex & index )
 {
     BookmarkInfo *info = bookmarksTableModel->getBookmarkAtRow(index.row());
-    emit newBookmarkActivated(info->frequency, info->modulation, info->bandwidth);
+    emit newBookmarkActivated(info->frequency, info->modulation, info->deviation, info->bandwidth);
 }
 
 void DockBookmarks::setNewFrequency(qint64 rx_freq)

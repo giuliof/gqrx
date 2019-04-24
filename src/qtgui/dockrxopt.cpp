@@ -268,6 +268,11 @@ QString DockRxOpt::currentDemodAsString()
     return GetStringForModulationIndex(currentDemod());
 }
 
+void DockRxOpt::setMaxDev(float deviation)
+{
+    return demodOpt->setMaxDev(deviation);
+}
+
 float DockRxOpt::currentMaxdev() const
 {
     return demodOpt->getMaxDev();

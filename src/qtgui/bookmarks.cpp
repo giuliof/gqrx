@@ -115,15 +115,34 @@ bool Bookmarks::load()
                 continue;
 
             QStringList strings = line.split(";");
-            if(strings.count() == 5)
+            if(strings.count() == 5)  // old style line
             {
                 BookmarkInfo info;
                 info.frequency  = strings[0].toLongLong();
                 info.name       = strings[1].trimmed();
                 info.modulation = strings[2].trimmed();
                 info.bandwidth  = strings[3].toInt();
+                // nullify deviation
                 // Multiple Tags may be separated by comma.
                 QString strTags = strings[4];
+                QStringList TagList = strTags.split(",");
+                for(int iTag=0; iTag<TagList.size(); ++iTag)
+                {
+                  info.tags.append(&findOrAddTag(TagList[iTag].trimmed()));
+                }
+
+                m_BookmarkList.append(info);
+            }
+            else if (strings.count() == 6) {
+                BookmarkInfo info;
+                info.frequency  = strings[0].toLongLong();
+                info.name       = strings[1].trimmed();
+                info.modulation = strings[2].trimmed();
+                info.bandwidth  = strings[3].toInt();
+                info.deviation  = strings[4].toInt();
+                // nullify deviation
+                // Multiple Tags may be separated by comma.
+                QString strTags = strings[5];
                 QStringList TagList = strTags.split(",");
                 for(int iTag=0; iTag<TagList.size(); ++iTag)
                 {
@@ -180,6 +199,7 @@ bool Bookmarks::save()
                   QString("Name").leftJustified(25)+ "; " +
                   QString("Modulation").leftJustified(20) + "; " +
                   QString("Bandwidth").rightJustified(10) + "; " +
+                  QString("Deviation").rightJustified(10) + "; " +
                   QString("Tags") << endl;
 
         for (int i = 0; i < m_BookmarkList.size(); i++)
@@ -188,7 +208,8 @@ bool Bookmarks::save()
             QString line = QString::number(info.frequency).rightJustified(12) +
                     "; " + info.name.leftJustified(25) + "; " +
                     info.modulation.leftJustified(20)+ "; " +
-                    QString::number(info.bandwidth).rightJustified(10) + "; ";
+                    QString::number(info.bandwidth).rightJustified(10) + "; " +
+                    QString::number(info.deviation).rightJustified(10)+ "; ";
             for(int iTag = 0; iTag<info.tags.size(); ++iTag)
             {
                 TagInfo& tag = *info.tags[iTag];
