@@ -122,6 +122,11 @@ public:
 
 private:
     Bookmarks(); // Singleton Constructor is private.
+    bool loadJSON();
+    bool loadCSV();
+    bool saveJSON();
+    bool saveCSV();
+
     QList<BookmarkInfo> m_BookmarkList;
     QList<TagInfo> m_TagList;
     QString        m_bookmarksFile;

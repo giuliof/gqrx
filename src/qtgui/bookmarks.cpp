@@ -26,6 +26,9 @@
 #include <QTextStream>
 #include <QString>
 #include <QSet>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
 #include <algorithm>
 #include "bookmarks.h"
 #include <stdio.h>
@@ -53,7 +56,7 @@ Bookmarks& Bookmarks::Get()
 
 void Bookmarks::setConfigDir(const QString& cfg_dir)
 {
-    m_bookmarksFile = cfg_dir + "/bookmarks.csv";
+    m_bookmarksFile = cfg_dir + "/bookmarks";
     printf("BookmarksFile is %s\n", m_bookmarksFile.toStdString().c_str());
 }
 
@@ -74,7 +77,80 @@ void Bookmarks::remove(int index)
 
 bool Bookmarks::load()
 {
-    QFile file(m_bookmarksFile);
+    if (false)
+        return loadJSON();
+    else
+        return loadCSV();
+}
+
+bool Bookmarks::loadJSON() {
+    QJsonDocument doc;
+
+    // Open file and convert it to json
+    {
+        QFile file(m_bookmarksFile + ".json");
+        
+        if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+            return false;
+        
+        doc = QJsonDocument().fromJson(file.readAll());
+
+        file.close();
+    }
+
+    m_BookmarkList.clear();
+    m_TagList.clear();
+
+    // Parse the tags
+    {
+        QJsonArray tags = doc.object()["tags"].toArray();
+
+        // always create the "Untagged" entry.
+        findOrAddTag(TagInfo::strUntagged);
+
+        for (int i = 0; i < tags.size(); i++)
+        {
+            // TODO: notify invalid lines
+            QJsonObject tag = tags[i].toObject();
+            TagInfo &info = findOrAddTag(tag["name"].toString());
+            info.color = QColor(tag["color"].toString().trimmed());
+        }
+
+        std::sort(m_TagList.begin(),m_TagList.end());
+    }
+
+    // Parse the bookmarks
+    {
+        QJsonArray bookmarks = doc.object()["bookmarks"].toArray();
+
+        for (int i = 0; i < bookmarks.size(); i++)
+        {
+            QJsonObject bookmark = bookmarks[i].toObject();
+            BookmarkInfo info;
+            info.frequency  = bookmark["frequency"].toString().toLongLong();
+            info.name       = bookmark["name"].toString().trimmed();
+            info.modulation = bookmark["modulation"].toString().trimmed();
+            info.bandwidth  = bookmark["bandwidth"].toInt();
+            // Multiple Tags may be separated by comma.
+            QJsonArray TagList = bookmark["tag_list"].toArray();
+            for(int i = 0; i < TagList.size(); i++)
+            {
+                QString tag = TagList[i].toString();
+                info.tags.append(&findOrAddTag(tag.trimmed()));
+            }
+
+            m_BookmarkList.append(info);
+        }
+        std::stable_sort(m_BookmarkList.begin(),m_BookmarkList.end());
+    }
+
+    emit BookmarksChanged();
+
+    return true;
+}
+
+bool Bookmarks::loadCSV() {
+    QFile file(m_bookmarksFile + ".csv");
     if (file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
         m_BookmarkList.clear();
@@ -146,10 +222,82 @@ bool Bookmarks::load()
     return false;
 }
 
-//FIXME: Commas in names
 bool Bookmarks::save()
 {
-    QFile file(m_bookmarksFile);
+    if (false)
+        return saveJSON();
+    else
+        return saveCSV();
+}
+
+bool Bookmarks::saveJSON()
+{
+    // Build tags array
+    QJsonArray tags;
+
+    QSet<TagInfo*> usedTags;
+    for (int iBookmark = 0; iBookmark < m_BookmarkList.size(); iBookmark++)
+    {
+        BookmarkInfo& info = m_BookmarkList[iBookmark];
+        for(int iTag = 0; iTag < info.tags.size(); ++iTag)
+        {
+            TagInfo& tag = *info.tags[iTag];
+            usedTags.insert(&tag);
+        }
+    }
+
+    for (QSet<TagInfo*>::iterator i = usedTags.begin(); i != usedTags.end(); i++)
+    {
+        QJsonObject tag;
+        TagInfo& info = **i;
+        tag["name"] = info.name;
+        tag["color"] = info.color.name();
+        tags.append(tag);
+    }
+
+    // Build bookmarks array
+    QJsonArray bookmarks;
+    
+    for (int i = 0; i < m_BookmarkList.size(); i++)
+    {
+        QJsonObject bookmark;
+        BookmarkInfo& info = m_BookmarkList[i];
+        bookmark["frequency"] = QString::number(info.frequency);
+        bookmark["name"] = info.name;
+        bookmark["modulation"] = info.modulation;
+        bookmark["bandwidth"] = info.bandwidth;
+
+        QJsonArray TagList;
+        for(int iTag = 0; iTag<info.tags.size(); ++iTag)
+        {
+            TagInfo& tag = *info.tags[iTag];
+            TagList.append(tag.name);
+        }
+
+        bookmark["tag_list"] = TagList;
+
+        bookmarks.append(bookmark);
+    }
+
+    // Save full json object in file
+    QJsonObject j;
+    j["tags"] = tags;
+    j["bookmarks"] = bookmarks;
+
+    QFile file(m_bookmarksFile + ".json");
+    if(file.open(QFile::WriteOnly | QFile::Truncate | QIODevice::Text)) {
+        file.write(QJsonDocument(j).toJson());
+        file.close();
+        return true;
+    }
+
+    return false;
+}
+
+//FIXME: Commas in names
+bool Bookmarks::saveCSV()
+{
+    QFile file(m_bookmarksFile + ".csv");
     if(file.open(QFile::WriteOnly | QFile::Truncate | QIODevice::Text))
     {
         QTextStream stream(&file);
