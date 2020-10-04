@@ -258,7 +258,7 @@ MainWindow::MainWindow(const QString cfgfile, bool edit_conf, QWidget *parent) :
     // Bookmarks
     connect(uiDockBookmarks, SIGNAL(newBookmarkActivated(qint64, QString, int)), this, SLOT(onBookmarkActivated(qint64, QString, int)));
     connect(uiDockBookmarks->actionAddBookmark, SIGNAL(triggered()), this, SLOT(on_actionAddBookmark_triggered()));
-    connect(ui->actionSaveinJSON, SIGNAL(triggered(bool)), &Bookmarks::Get(), SLOT(actionSaveInJSON(bool)));
+    connect(ui->actionSaveinJSON, SIGNAL(toggled(bool)), &Bookmarks::Get(), SLOT(actionSaveInJSON(bool)));
     connect(ui->actionMigratetoJSON, SIGNAL(triggered()), &Bookmarks::Get(), SLOT(actionMigrateToJSON()));
 
 
@@ -633,6 +633,12 @@ bool MainWindow::loadConfig(const QString cfgfile, bool check_crash,
        ui->actionRemoteControl->setChecked(true);
     }
 
+    /*
+     * Initialization of the bookmarks format
+     */
+    // This will trigger re-reading of bookmarks
+    ui->actionSaveinJSON->setChecked(m_settings->value("bookmarks/save_in_json", false).toBool());
+
     return conf_ok;
 }
 
@@ -712,6 +718,7 @@ void MainWindow::storeSession()
 
         remote->saveSettings(m_settings);
         iq_tool->saveSettings(m_settings);
+        m_settings->setValue("bookmarks/save_in_json", ui->actionSaveinJSON->isChecked());
 
         {
             int     flo, fhi;

@@ -63,6 +63,7 @@ void Bookmarks::setConfigDir(const QString& cfg_dir)
 
 void Bookmarks::actionSaveInJSON(bool value) {
     format_JSON = value;
+    load();
 }
 
 void Bookmarks::actionMigrateToJSON() {
