@@ -44,9 +44,10 @@ Bookmarks::Bookmarks()
      m_TagList.append(tag);
 }
 
-void Bookmarks::create()
+void Bookmarks::create(bool format_JSON)
 {
     m_pThis = new Bookmarks;
+    m_pThis->format_JSON = format_JSON;
 }
 
 Bookmarks& Bookmarks::Get()
@@ -58,6 +59,14 @@ void Bookmarks::setConfigDir(const QString& cfg_dir)
 {
     m_bookmarksFile = cfg_dir + "/bookmarks";
     printf("BookmarksFile is %s\n", m_bookmarksFile.toStdString().c_str());
+}
+
+void Bookmarks::actionSaveInJSON(bool value) {
+    format_JSON = value;
+}
+
+void Bookmarks::actionMigrateToJSON() {
+    saveJSON();
 }
 
 void Bookmarks::add(BookmarkInfo &info)
@@ -77,7 +86,7 @@ void Bookmarks::remove(int index)
 
 bool Bookmarks::load()
 {
-    if (false)
+    if (format_JSON)
         return loadJSON();
     else
         return loadCSV();
@@ -224,7 +233,7 @@ bool Bookmarks::loadCSV() {
 
 bool Bookmarks::save()
 {
-    if (false)
+    if (format_JSON)
         return saveJSON();
     else
         return saveCSV();

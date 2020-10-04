@@ -237,6 +237,8 @@
     <addaction name="actionRemoteConfig"/>
     <addaction name="separator"/>
     <addaction name="actionAddBookmark"/>
+    <addaction name="actionSaveinJSON"/>
+    <addaction name="actionMigratetoJSON"/>
     <addaction name="separator"/>
     <addaction name="actionIqTool"/>
     <addaction name="separator"/>
@@ -539,6 +541,22 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+W</string>
+   </property>
+  </action>
+  <action name="actionMigratetoJSON">
+   <property name="text">
+    <string>Migrate to JSON</string>
+   </property>
+   <property name="toolTip">
+    <string>Convert current .csv bookmarks to JSON one</string>
+   </property>
+  </action>
+  <action name="actionSaveinJSON">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Save in JSON</string>
    </property>
   </action>
  </widget>

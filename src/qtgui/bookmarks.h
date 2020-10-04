@@ -99,7 +99,7 @@ class Bookmarks : public QObject
     Q_OBJECT
 public:
     // This is a Singleton Class now because you can not send qt-signals from static functions.
-    static void create();
+    static void create(bool);
     static Bookmarks& Get();
 
     void add(BookmarkInfo& info);
@@ -120,6 +120,10 @@ public:
 
     void setConfigDir(const QString&);
 
+public slots:
+    void actionSaveInJSON(bool value);
+    void actionMigrateToJSON();
+
 private:
     Bookmarks(); // Singleton Constructor is private.
     bool loadJSON();
@@ -131,6 +135,9 @@ private:
     QList<TagInfo> m_TagList;
     QString        m_bookmarksFile;
     static Bookmarks* m_pThis;
+
+    // true = save in JSON; false = save in CSV
+    bool format_JSON;
 
 signals:
     void BookmarksChanged(void);

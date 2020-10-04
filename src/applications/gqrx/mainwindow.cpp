@@ -69,7 +69,7 @@ MainWindow::MainWindow(const QString cfgfile, bool edit_conf, QWidget *parent) :
     dec_afsk1200(0)
 {
     ui->setupUi(this);
-    Bookmarks::create();
+    Bookmarks::create(ui->actionSaveinJSON->isChecked());
 
     /* Initialise default configuration directory */
     QByteArray xdg_dir = qgetenv("XDG_CONFIG_HOME");
@@ -258,6 +258,8 @@ MainWindow::MainWindow(const QString cfgfile, bool edit_conf, QWidget *parent) :
     // Bookmarks
     connect(uiDockBookmarks, SIGNAL(newBookmarkActivated(qint64, QString, int)), this, SLOT(onBookmarkActivated(qint64, QString, int)));
     connect(uiDockBookmarks->actionAddBookmark, SIGNAL(triggered()), this, SLOT(on_actionAddBookmark_triggered()));
+    connect(ui->actionSaveinJSON, SIGNAL(triggered(bool)), &Bookmarks::Get(), SLOT(actionSaveInJSON(bool)));
+    connect(ui->actionMigratetoJSON, SIGNAL(triggered()), &Bookmarks::Get(), SLOT(actionMigrateToJSON()));
 
 
     // I/Q playback
