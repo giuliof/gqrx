@@ -57,6 +57,19 @@ struct TagInfo
     }
 };
 
+struct DemodFmOptions {
+    float max_dev;
+    double tau;
+};
+
+struct DemodAmOptions {
+    bool DCR;
+};
+
+struct DemodCwOptions {
+    int cwOffset;
+};
+
 struct BookmarkInfo
 {
     qint64  frequency;
@@ -64,6 +77,11 @@ struct BookmarkInfo
     QString modulation;
     qint64  bandwidth;
     QList<TagInfo*> tags;
+    union {
+        DemodFmOptions demodFmOptions;
+        DemodAmOptions demodAmOptions;
+        DemodCwOptions demodCwOptions;
+    };
 
     BookmarkInfo()
     {

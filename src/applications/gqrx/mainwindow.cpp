@@ -256,7 +256,7 @@ MainWindow::MainWindow(const QString cfgfile, bool edit_conf, QWidget *parent) :
     connect(uiDockRDS, SIGNAL(rdsDecoderToggled(bool)), this, SLOT(setRdsDecoder(bool)));
 
     // Bookmarks
-    connect(uiDockBookmarks, SIGNAL(newBookmarkActivated(qint64, QString, int)), this, SLOT(onBookmarkActivated(qint64, QString, int)));
+    connect(uiDockBookmarks, SIGNAL(newBookmarkActivated(BookmarkInfo)), this, SLOT(onBookmarkActivated(BookmarkInfo)));
     connect(uiDockBookmarks->actionAddBookmark, SIGNAL(triggered()), this, SLOT(on_actionAddBookmark_triggered()));
     connect(ui->actionSaveinJSON, SIGNAL(toggled(bool)), &Bookmarks::Get(), SLOT(actionSaveInJSON(bool)));
     connect(ui->actionMigratetoJSON, SIGNAL(triggered()), &Bookmarks::Get(), SLOT(actionMigrateToJSON()));
@@ -2099,10 +2099,10 @@ void MainWindow::setRdsDecoder(bool checked)
     }
 }
 
-void MainWindow::onBookmarkActivated(qint64 freq, QString demod, int bandwidth)
+void MainWindow::onBookmarkActivated(BookmarkInfo info)
 {
-    setNewFrequency(freq);
-    selectDemod(demod);
+    setNewFrequency(info.frequency);
+    selectDemod(info.modulation);
 
     /* Check if filter is symmetric or not by checking the presets */
     int mode = uiDockRxOpt->currentDemod();
@@ -2113,16 +2113,16 @@ void MainWindow::onBookmarkActivated(qint64 freq, QString demod, int bandwidth)
 
     if(lo + hi == 0)
     {
-        lo = -bandwidth / 2;
-        hi =  bandwidth / 2;
+        lo = -info.bandwidth / 2;
+        hi =  info.bandwidth / 2;
     }
     else if(lo >= 0 && hi >= 0)
     {
-        hi = lo + bandwidth;
+        hi = lo + info.bandwidth;
     }
     else if(lo <= 0 && hi <= 0)
     {
-        lo = hi - bandwidth;
+        lo = hi - info.bandwidth;
     }
 
     on_plotter_newFilterFreq(lo, hi);
@@ -2337,6 +2337,22 @@ void MainWindow::on_actionAddBookmark_triggered()
 
         for (i = 0; i < listTags.size(); ++i)
             info.tags.append(&Bookmarks::Get().findOrAddTag(listTags[i]));
+
+        switch(uiDockRxOpt->currentDemod()) {
+            case DockRxOpt::MODE_NFM:
+                info.demodFmOptions.max_dev = uiDockRxOpt->currentMaxdev();
+                info.demodFmOptions.tau = uiDockRxOpt->currentEmph();
+                break;
+
+            case DockRxOpt::MODE_AM:
+                info.demodAmOptions.DCR = uiDockRxOpt->isAmDcrChecked();
+                break;
+            
+            case DockRxOpt::MODE_CWL:
+            case DockRxOpt::MODE_CWU:
+                info.demodCwOptions.cwOffset = uiDockRxOpt->getCwOffset();
+                break;
+        }
 
         Bookmarks::Get().add(info);
         uiDockBookmarks->updateTags();

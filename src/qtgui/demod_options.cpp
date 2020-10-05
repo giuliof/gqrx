@@ -146,6 +146,12 @@ float CDemodOptions::getMaxDev(void) const
     return maxdev_from_index(ui->maxdevSelector->currentIndex());
 }
 
+bool CDemodOptions::isAmDcrChecked() const
+{
+    return ui->dcrCheckBox->isChecked();
+}
+
+
 void CDemodOptions::setEmph(double tau)
 {
     ui->emphSelector->setCurrentIndex((tau_to_index(tau)));

@@ -340,6 +340,12 @@ int DockRxOpt::getCwOffset() const
     return demodOpt->getCwOffset();
 }
 
+bool DockRxOpt::isAmDcrChecked() const
+{
+    return demodOpt->isAmDcrChecked();
+}
+
+
 /** Read receiver configuration from settings data. */
 void DockRxOpt::readSettings(QSettings *settings)
 {
