@@ -149,6 +149,25 @@ bool Bookmarks::loadJSON() {
                 info.tags.append(&findOrAddTag(tag.trimmed()));
             }
 
+            // Load modulator options
+            QJsonObject options = bookmark["options"].toObject();
+            if (info.modulation == "Narrow FM")
+            {
+                info.demodFmOptions.max_dev = options["max_dev"].toString("-1").toFloat();
+                info.demodFmOptions.tau = options["tau"].toString("-1").toFloat();
+            }
+            else if (info.modulation == "CW-L" || info.modulation == "CW-U")
+            {
+                info.demodCwOptions.cwOffset = options["cwOffset"].toInt(-1);
+            }
+            else if (info.modulation == "AM")
+            {
+                if (!options.contains("DCR"))
+                    info.demodAmOptions.DCR = -1;
+                else
+                    info.demodAmOptions.DCR = options["DCR"].toBool(false);
+            }
+
             m_BookmarkList.append(info);
         }
         std::stable_sort(m_BookmarkList.begin(),m_BookmarkList.end());
@@ -240,6 +259,7 @@ bool Bookmarks::save()
         return saveCSV();
 }
 
+// NOTE: at the moment demod options are not saved. Only loaded.
 bool Bookmarks::saveJSON()
 {
     // Build tags array
