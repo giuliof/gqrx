@@ -2104,6 +2104,25 @@ void MainWindow::onBookmarkActivated(BookmarkInfo info)
     setNewFrequency(info.frequency);
     selectDemod(info.modulation);
 
+    if (info.modulation == "Narrow FM")
+    {
+        if (info.demodFmOptions.tau > 0)
+            setFmEmph(info.demodFmOptions.tau);
+
+        if (info.demodFmOptions.max_dev > 0)
+            setFmMaxdev(info.demodFmOptions.max_dev);
+    }
+    else if (info.modulation == "CW-L" || info.modulation == "CW-U")
+    {
+        if (info.demodCwOptions.cwOffset > 0)
+            setCwOffset(info.demodCwOptions.cwOffset);
+    }
+    else if (info.modulation == "AM")
+    {
+        if (info.demodAmOptions.DCR > 0)
+            setAmDcr(info.demodAmOptions.DCR);
+    }
+
     /* Check if filter is symmetric or not by checking the presets */
     int mode = uiDockRxOpt->currentDemod();
     int preset = uiDockRxOpt->currentFilter();

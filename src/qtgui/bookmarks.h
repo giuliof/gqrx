@@ -63,7 +63,7 @@ struct DemodFmOptions {
 };
 
 struct DemodAmOptions {
-    bool DCR;
+    int DCR;  // Could be bool but I need true/false/unset
 };
 
 struct DemodCwOptions {
