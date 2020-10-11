@@ -259,7 +259,7 @@ bool Bookmarks::save()
         return saveCSV();
 }
 
-// NOTE: at the moment demod options are not saved. Only loaded.
+// NOTE: at the moment demod options are not saved. Only loaded and eventually kept.
 bool Bookmarks::saveJSON()
 {
     // Build tags array
@@ -303,6 +303,27 @@ bool Bookmarks::saveJSON()
             TagInfo& tag = *info.tags[iTag];
             TagList.append(tag.name);
         }
+
+        QJsonObject options;
+        if (info.modulation == "Narrow FM")
+        {
+            if (info.demodFmOptions.tau > 0)
+                options["tau"] = QString::number(info.demodFmOptions.tau);
+
+            if (info.demodFmOptions.max_dev > 0)
+                options["max_dev"] = QString::number(info.demodFmOptions.max_dev);
+        }
+        else if (info.modulation == "CW-L" || info.modulation == "CW-U")
+        {
+            if (info.demodCwOptions.cwOffset > 0)
+                options["cwOffset"] = QString::number(info.demodCwOptions.cwOffset);
+        }
+        else if (info.modulation == "AM")
+        {
+            if (info.demodAmOptions.DCR > 0)
+                options["DCR"] = QString::number(info.demodAmOptions.DCR);
+        }
+        bookmark["options"] = options;
 
         bookmark["tag_list"] = TagList;
 
