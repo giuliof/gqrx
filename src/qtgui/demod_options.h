@@ -63,6 +63,7 @@ public:
     void setMaxDev(float max_dev);
     float getMaxDev(void) const;
 
+    void setAmDcr(bool dcr);
     bool isAmDcrChecked() const;
 
     void setEmph(double tau);

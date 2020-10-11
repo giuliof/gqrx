@@ -99,13 +99,17 @@ public:
     int  currentDemod() const;
     QString currentDemodAsString();
 
+    void setCurrentMaxdev(float max_dev);
     float currentMaxdev() const;
+    void setCurrentEmph(double tau);
     double currentEmph() const;
     double currentSquelchLevel() const;
 
     void    getFilterPreset(int mode, int preset, int * lo, int * hi) const;
+    void    setCurrentCwOffset(int cwOffset);
     int     getCwOffset() const;
 
+    void setCurrentAmDcr(bool dcr);
     bool isAmDcrChecked() const;
 
     double  getSqlLevel(void) const;

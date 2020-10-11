@@ -284,9 +284,19 @@ QString DockRxOpt::currentDemodAsString()
     return GetStringForModulationIndex(currentDemod());
 }
 
+void DockRxOpt::setCurrentMaxdev(float max_dev)
+{
+    demodOpt->setMaxDev(max_dev);
+}
+
 float DockRxOpt::currentMaxdev() const
 {
     return demodOpt->getMaxDev();
+}
+
+void DockRxOpt::setCurrentEmph(double tau)
+{
+    demodOpt->setEmph(tau);
 }
 
 double DockRxOpt::currentEmph() const
@@ -335,9 +345,19 @@ void DockRxOpt::getFilterPreset(int mode, int preset, int * lo, int * hi) const
     *hi = filter_preset_table[mode][preset][1];
 }
 
+void DockRxOpt::setCurrentCwOffset(int cwOffset)
+{
+    demodOpt->setCwOffset(cwOffset);
+}
+
 int DockRxOpt::getCwOffset() const
 {
     return demodOpt->getCwOffset();
+}
+
+void DockRxOpt::setCurrentAmDcr(bool dcr)
+{
+    demodOpt->setAmDcr(dcr);
 }
 
 bool DockRxOpt::isAmDcrChecked() const

@@ -146,11 +146,14 @@ float CDemodOptions::getMaxDev(void) const
     return maxdev_from_index(ui->maxdevSelector->currentIndex());
 }
 
+void CDemodOptions::setAmDcr(bool dcr) {
+    ui->dcrCheckBox->setCheckState(dcr ? Qt::CheckState::Checked : Qt::CheckState::Unchecked);
+}
+
 bool CDemodOptions::isAmDcrChecked() const
 {
     return ui->dcrCheckBox->isChecked();
 }
-
 
 void CDemodOptions::setEmph(double tau)
 {
