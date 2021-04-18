@@ -1,7 +1,7 @@
 /* -*- c++ -*- */
 /*
  * Gqrx SDR: Software defined radio receiver powered by GNU Radio and Qt
- *           http://gqrx.dk/
+ *           https://gqrx.dk/
  *
  * Copyright 2012 Alexandru Csete OZ9AEC.
  * FM stereo implementation by Alex Grinkov a.grinkov(at)gmail.com.
@@ -38,7 +38,11 @@
 
 class wfmrx;
 
+#if GNURADIO_VERSION < 0x030900
 typedef boost::shared_ptr<wfmrx> wfmrx_sptr;
+#else
+typedef std::shared_ptr<wfmrx> wfmrx_sptr;
+#endif
 
 /*! \brief Public constructor of wfm_rx. */
 wfmrx_sptr make_wfmrx(float quad_rate, float audio_rate);
@@ -118,7 +122,6 @@ private:
     rx_meter_c_sptr           meter;     /*!< Signal strength. */
     gr::analog::simple_squelch_cc::sptr sql;       /*!< Squelch. */
     rx_demod_fm_sptr          demod_fm;  /*!< FM demodulator. */
-    resampler_ff_sptr         midle_rr;  /*!< Resampler. */
     stereo_demod_sptr         stereo;    /*!< FM stereo demodulator. */
     stereo_demod_sptr         stereo_oirt;    /*!< FM stereo oirt demodulator. */
     stereo_demod_sptr         mono;      /*!< FM stereo demodulator OFF. */

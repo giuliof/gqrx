@@ -65,6 +65,7 @@ CFreqCtrl::CFreqCtrl(QWidget *parent) :
     m_LRMouseFreqSel = false;
     m_ActiveEditDigit = -1;
     m_ResetLowerDigits = true;
+    m_InvertScrolling = false;
     m_UnitsFont = QFont("Arial", 12, QFont::Normal);
     m_DigitFont = QFont("Arial", 12, QFont::Normal);
 
@@ -348,7 +349,9 @@ void CFreqCtrl::updateCtrl(bool all)
 void CFreqCtrl::resizeEvent(QResizeEvent *)
 {
 // qDebug() <<rect.width() << rect.height();
-    m_Pixmap = QPixmap(size()); // resize pixmap to current control size
+    int dpr = devicePixelRatio();
+    m_Pixmap = QPixmap(width() * dpr, height() * dpr); // resize pixmap to current control size
+    m_Pixmap.setDevicePixelRatio(dpr);
     m_Pixmap.fill(m_BkColor);
     m_UpdateAll = true;
     updateCtrl(true);
@@ -464,7 +467,8 @@ void CFreqCtrl::mousePressEvent(QMouseEvent *event)
 void CFreqCtrl::wheelEvent(QWheelEvent *event)
 {
     QPoint    pt = event->pos();
-    int       numDegrees = event->delta() / 8;
+    int       delta = m_InvertScrolling ? -event->angleDelta().y() : event->angleDelta().y();
+    int       numDegrees = delta / 8;
     int       numSteps = numDegrees / 15;
 
     for (int i = m_DigStart; i < m_NumDigits; i++)
@@ -848,4 +852,17 @@ void CFreqCtrl::cursorEnd()
         cursor().setPos(mapToGlobal(m_DigitInfo[m_FirstEditableDigit].dQRect.
                                     center()));
     }
+}
+
+void CFreqCtrl::setFrequencyFocus()
+{
+    uint8_t position = floor(log10(m_freq));
+    position = (uint8_t)fmax(position, 4);      // restrict min to 100s of kHz
+
+    QMouseEvent mouseEvent(QEvent::MouseMove,
+                           m_DigitInfo[position].dQRect.center(),
+                           Qt::NoButton,
+                           Qt::NoButton,
+                           Qt::NoModifier);
+    mouseMoveEvent(&mouseEvent);
 }

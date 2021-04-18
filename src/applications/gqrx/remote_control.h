@@ -1,7 +1,7 @@
 /* -*- c++ -*- */
 /*
  * Gqrx SDR: Software defined radio receiver powered by GNU Radio and Qt
- *           http://gqrx.dk/
+ *           https://gqrx.dk/
  *
  * Copyright 2013 Alexandru Csete OZ9AEC.
  *
@@ -106,6 +106,7 @@ signals:
     void startAudioRecorderEvent();
     void stopAudioRecorderEvent();
     void gainChanged(QString name, double value);
+    void dspChanged(bool value);
 
 private slots:
     void acceptConnection();
@@ -117,7 +118,7 @@ private:
 
     QStringList rc_allowed_hosts;  /*!< Hosts where we accept connection from. */
     int         rc_port;           /*!< The port we are listening on. */
-    
+
     qint64      rc_freq;
     qint64      rc_filter_offset;
     qint64      bw_half;
@@ -129,7 +130,7 @@ private:
     float       signal_level;      /*!< Signal level in dBFS */
     double      squelch_level;     /*!< Squelch level in dBFS */
     bool        audio_recorder_status; /*!< Recording enabled */
-    bool        receiver_running;  /*!< Wether the receiver is running or not */
+    bool        receiver_running;  /*!< Whether the receiver is running or not */
     bool        hamlib_compatible;
     gain_list_t gains;             /*!< Possible and current gain settings */
 

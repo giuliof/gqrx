@@ -1,7 +1,7 @@
 /* -*- c++ -*- */
 /*
  * Gqrx SDR: Software defined radio receiver powered by GNU Radio and Qt
- *           http://gqrx.dk/
+ *           https://gqrx.dk/
  *
  * Copyright 2012-2013 Alexandru Csete OZ9AEC.
  *
@@ -28,7 +28,11 @@
 
 class receiver_base_cf;
 
+#if GNURADIO_VERSION < 0x030900
 typedef boost::shared_ptr<receiver_base_cf> receiver_base_cf_sptr;
+#else
+typedef std::shared_ptr<receiver_base_cf> receiver_base_cf_sptr;
+#endif
 
 
 /*! \brief Base class for receivers that output audio.
@@ -42,8 +46,8 @@ class receiver_base_cf : public gr::hier_block2
 {
 
 public:
-    /*! \brief Public contructor.
-     *  \param src_name Descriptive name used in the contructor of gr::hier_block2
+    /*! \brief Public constructor.
+     *  \param src_name Descriptive name used in the constructor of gr::hier_block2
      */
     receiver_base_cf(std::string src_name);
     virtual ~receiver_base_cf();
@@ -90,6 +94,11 @@ public:
     /* AM parameters */
     virtual bool has_am();
     virtual void set_am_dcr(bool enabled);
+
+    /* AM-Sync parameters */
+    virtual bool has_amsync();
+    virtual void set_amsync_dcr(bool enabled);
+    virtual void set_amsync_pll_bw(float pll_bw);
 
     virtual void get_rds_data(std::string &outbuff, int &num);
     virtual void start_rds_decoder();

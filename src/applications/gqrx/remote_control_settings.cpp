@@ -1,7 +1,7 @@
 /* -*- c++ -*- */
 /*
  * Gqrx SDR: Software defined radio receiver powered by GNU Radio and Qt
- *           http://gqrx.dk/
+ *           https://gqrx.dk/
  *
  * Copyright 2013 Alexandru Csete OZ9AEC.
  *
@@ -57,7 +57,7 @@ int RemoteControlSettings::getPort(void) const
 /*! \brief Add items to the list of allowed hosts.
  *  \param hosts A list with the IP addresses of the allowed hosts.
  *
- * Note that setting the list wil lclear the current contents of the
+ * Note that setting the list will clear the current contents of the
  * list widget.
  */
 void RemoteControlSettings::setHosts(QStringList hosts)

@@ -195,18 +195,27 @@
      <x>0</x>
      <y>0</y>
      <width>521</width>
-     <height>19</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">
     <property name="title">
      <string>&amp;File</string>
     </property>
+    <widget class="QMenu" name="menu_RecentConfig">
+     <property name="toolTip">
+      <string>Load recently used setting</string>
+     </property>
+     <property name="title">
+      <string>&amp;Recent settings</string>
+     </property>
+    </widget>
     <addaction name="actionDSP"/>
     <addaction name="separator"/>
     <addaction name="actionIoConfig"/>
     <addaction name="actionLoadSettings"/>
     <addaction name="actionSaveSettings"/>
+    <addaction name="menu_RecentConfig"/>
     <addaction name="separator"/>
     <addaction name="actionSaveWaterfall"/>
     <addaction name="separator"/>
@@ -225,6 +234,7 @@
     <addaction name="actionNews"/>
     <addaction name="separator"/>
     <addaction name="actionRemoteProtocol"/>
+    <addaction name="actionKbdShortcuts"/>
     <addaction name="separator"/>
     <addaction name="actionAbout"/>
     <addaction name="actionAboutQt"/>
@@ -244,6 +254,7 @@
     <addaction name="separator"/>
     <addaction name="actionAFSK1200"/>
     <addaction name="separator"/>
+    <addaction name="actionDX_Cluster"/>
    </widget>
    <addaction name="menu_File"/>
    <addaction name="menu_Tools"/>
@@ -532,6 +543,18 @@
     <string>Remote control protocol</string>
    </property>
   </action>
+  <action name="actionKbdShortcuts">
+   <property name="icon">
+    <iconset resource="../../../resources/icons.qrc">
+     <normaloff>:/icons/icons/info.svg</normaloff>:/icons/icons/info.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Keyboard shortcuts</string>
+   </property>
+   <property name="toolTip">
+    <string>Show help on keyboard shortcuts</string>
+   </property>
+  </action>
   <action name="actionSaveWaterfall">
    <property name="text">
     <string>Save waterfall</string>
@@ -557,6 +580,15 @@
    </property>
    <property name="text">
     <string>Save in JSON</string>
+  <action name="actionDX_Cluster">
+   <property name="text">
+    <string>DX Cluster</string>
+   </property>
+   <property name="toolTip">
+    <string>Open DX Cluster Dialog</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+C</string>
    </property>
   </action>
  </widget>

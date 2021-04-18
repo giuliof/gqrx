@@ -1,7 +1,7 @@
 /* -*- c++ -*- */
 /*
  * Gqrx SDR: Software defined radio receiver powered by GNU Radio and Qt
- *           http://gqrx.dk/
+ *           https://gqrx.dk/
  *
  * Copyright 2013 Christian Lindner DL2VCL, Stefano Leucci.
  *
@@ -30,9 +30,8 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <algorithm>
+#include <iostream>
 #include "bookmarks.h"
-#include <stdio.h>
-#include <wchar.h>
 
 const QColor TagInfo::DefaultColor(Qt::lightGray);
 const QString TagInfo::strUntagged("Untagged");
@@ -58,7 +57,7 @@ Bookmarks& Bookmarks::Get()
 void Bookmarks::setConfigDir(const QString& cfg_dir)
 {
     m_bookmarksFile = cfg_dir + "/bookmarks";
-    printf("BookmarksFile is %s\n", m_bookmarksFile.toStdString().c_str());
+    std::cout << "BookmarksFile is " << m_bookmarksFile.toStdString() << std::endl;
 }
 
 void Bookmarks::actionSaveInJSON(bool value) {
@@ -207,7 +206,8 @@ bool Bookmarks::loadCSV() {
             }
             else
             {
-                printf("\nBookmarks: Ignoring Line:\n  %s\n", line.toLatin1().data());
+                std::cout << "Bookmarks: Ignoring Line:" << std::endl;
+                std::cout << "  " << line.toStdString() << std::endl;
             }
         }
         std::sort(m_TagList.begin(),m_TagList.end());
@@ -239,7 +239,8 @@ bool Bookmarks::loadCSV() {
             }
             else
             {
-                printf("\nBookmarks: Ignoring Line:\n  %s\n", line.toLatin1().data());
+                std::cout << "Bookmarks: Ignoring Line:" << std::endl;
+                std::cout << "  " << line.toStdString() << std::endl;
             }
         }
         file.close();
@@ -411,9 +412,9 @@ QList<BookmarkInfo> Bookmarks::getBookmarksInRange(qint64 low, qint64 high)
 {
     BookmarkInfo info;
     info.frequency=low;
-    QList<BookmarkInfo>::const_iterator lb = qLowerBound(m_BookmarkList, info);
+    QList<BookmarkInfo>::const_iterator lb = std::lower_bound(m_BookmarkList.begin(), m_BookmarkList.end(), info);
     info.frequency=high;
-    QList<BookmarkInfo>::const_iterator ub = qUpperBound(m_BookmarkList, info);
+    QList<BookmarkInfo>::const_iterator ub = std::upper_bound(m_BookmarkList.begin(), m_BookmarkList.end(), info);
 
     QList<BookmarkInfo> found;
 

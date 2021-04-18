@@ -1,7 +1,7 @@
 /* -*- c++ -*- */
 /*
  * Gqrx SDR: Software defined radio receiver powered by GNU Radio and Qt
- *           http://gqrx.dk/
+ *           https://gqrx.dk/
  *
  * Copyright 2011-2013 Alexandru Csete OZ9AEC.
  *
@@ -36,7 +36,7 @@ rx_fft_c_sptr make_rx_fft_c (unsigned int fftsize, double quad_rate, int wintype
 
 /*! \brief Create receiver FFT object.
  *  \param fftsize The FFT size.
- *  \param wintype The window type (see gr::filter::firdes::win_type).
+ *  \param wintype The window type (see gr::fft::window::win_type).
  *
  */
 rx_fft_c::rx_fft_c(unsigned int fftsize, double quad_rate, int wintype)
@@ -49,7 +49,11 @@ rx_fft_c::rx_fft_c(unsigned int fftsize, double quad_rate, int wintype)
 {
 
     /* create FFT object */
+#if GNURADIO_VERSION < 0x030900
     d_fft = new gr::fft::fft_complex(d_fftsize, true);
+#else
+    d_fft = new gr::fft::fft_complex_fwd(d_fftsize);
+#endif
 
     /* allocate circular buffer */
     d_cbuf.set_capacity(d_fftsize + d_quadrate);
@@ -83,7 +87,7 @@ int rx_fft_c::work(int noutput_items,
     (void) output_items;
 
     /* just throw new samples into the buffer */
-    boost::mutex::scoped_lock lock(d_mutex);
+    std::lock_guard<std::mutex> lock(d_mutex);
     for (i = 0; i < noutput_items; i++)
     {
         d_cbuf.push_back(in[i]);
@@ -99,7 +103,7 @@ int rx_fft_c::work(int noutput_items,
  */
 void rx_fft_c::get_fft_data(std::complex<float>* fftPoints, unsigned int &fftSize)
 {
-    boost::mutex::scoped_lock lock(d_mutex);
+    std::lock_guard<std::mutex> lock(d_mutex);
 
     if (d_cbuf.size() < d_fftsize)
     {
@@ -128,7 +132,7 @@ void rx_fft_c::get_fft_data(std::complex<float>* fftPoints, unsigned int &fftSiz
  *  \param size The size of data_in.
  *
  * Note that this function does not lock the mutex since the caller, get_fft_data()
- * has alrady locked it.
+ * has already locked it.
  */
 void rx_fft_c::do_fft(unsigned int size)
 {
@@ -151,7 +155,7 @@ void rx_fft_c::do_fft(unsigned int size)
 /*! \brief Update circular buffer and FFT object. */
 void rx_fft_c::set_params()
 {
-    boost::mutex::scoped_lock lock(d_mutex);
+    std::lock_guard<std::mutex> lock(d_mutex);
 
     /* clear and resize circular buffer */
     d_cbuf.clear();
@@ -164,7 +168,11 @@ void rx_fft_c::set_params()
 
     /* reset FFT object (also reset FFTW plan) */
     delete d_fft;
-    d_fft = new gr::fft::fft_complex (d_fftsize, true);
+#if GNURADIO_VERSION < 0x030900
+    d_fft = new gr::fft::fft_complex(d_fftsize, true);
+#else
+    d_fft = new gr::fft::fft_complex_fwd(d_fftsize);
+#endif
 }
 
 /*! \brief Set new FFT size. */
@@ -204,13 +212,13 @@ void rx_fft_c::set_window_type(int wintype)
 
     d_wintype = wintype;
 
-    if ((d_wintype < gr::filter::firdes::WIN_HAMMING) || (d_wintype > gr::filter::firdes::WIN_FLATTOP))
+    if ((d_wintype < gr::fft::window::WIN_HAMMING) || (d_wintype > gr::fft::window::WIN_FLATTOP))
     {
-        d_wintype = gr::filter::firdes::WIN_HAMMING;
+        d_wintype = gr::fft::window::WIN_HAMMING;
     }
 
     d_window.clear();
-    d_window = gr::filter::firdes::window((gr::filter::firdes::win_type)d_wintype, d_fftsize, 6.76);
+    d_window = gr::fft::window::build((gr::fft::window::win_type)d_wintype, d_fftsize, 6.76);
 }
 
 /*! \brief Get currently used window type. */
@@ -229,7 +237,7 @@ rx_fft_f_sptr make_rx_fft_f(unsigned int fftsize, double audio_rate, int wintype
 
 /*! \brief Create receiver FFT object.
  *  \param fftsize The FFT size.
- *  \param wintype The window type (see gr::filter::firdes::win_type).
+ *  \param wintype The window type (see gr::fft::window::win_type).
  *
  */
 rx_fft_f::rx_fft_f(unsigned int fftsize, double audio_rate, int wintype)
@@ -242,7 +250,11 @@ rx_fft_f::rx_fft_f(unsigned int fftsize, double audio_rate, int wintype)
 {
 
     /* create FFT object */
+#if GNURADIO_VERSION < 0x030900
     d_fft = new gr::fft::fft_complex(d_fftsize, true);
+#else
+    d_fft = new gr::fft::fft_complex_fwd(d_fftsize);
+#endif
 
     /* allocate circular buffer */
     d_cbuf.set_capacity(d_fftsize + d_audiorate);
@@ -274,7 +286,7 @@ int rx_fft_f::work(int noutput_items,
     (void) output_items;
 
     /* just throw new samples into the buffer */
-    boost::mutex::scoped_lock lock(d_mutex);
+    std::lock_guard<std::mutex> lock(d_mutex);
     for (i = 0; i < noutput_items; i++)
     {
         d_cbuf.push_back(in[i]);
@@ -289,7 +301,7 @@ int rx_fft_f::work(int noutput_items,
  */
 void rx_fft_f::get_fft_data(std::complex<float>* fftPoints, unsigned int &fftSize)
 {
-    boost::mutex::scoped_lock lock(d_mutex);
+    std::lock_guard<std::mutex> lock(d_mutex);
 
     if (d_cbuf.size() < d_fftsize)
     {
@@ -318,7 +330,7 @@ void rx_fft_f::get_fft_data(std::complex<float>* fftPoints, unsigned int &fftSiz
  *  \param size The size of data_in.
  *
  * Note that this function does not lock the mutex since the caller, get_fft_data()
- * has alrady locked it.
+ * has already locked it.
  */
 void rx_fft_f::do_fft(unsigned int size)
 {
@@ -347,7 +359,7 @@ void rx_fft_f::set_fft_size(unsigned int fftsize)
 {
     if (fftsize != d_fftsize)
     {
-        boost::mutex::scoped_lock lock(d_mutex);
+        std::lock_guard<std::mutex> lock(d_mutex);
 
         d_fftsize = fftsize;
 
@@ -362,7 +374,11 @@ void rx_fft_f::set_fft_size(unsigned int fftsize)
 
         /* reset FFT object (also reset FFTW plan) */
         delete d_fft;
+#if GNURADIO_VERSION < 0x030900
         d_fft = new gr::fft::fft_complex(d_fftsize, true);
+#else
+        d_fft = new gr::fft::fft_complex_fwd(d_fftsize);
+#endif
     }
 }
 
@@ -383,13 +399,13 @@ void rx_fft_f::set_window_type(int wintype)
 
     d_wintype = wintype;
 
-    if ((d_wintype < gr::filter::firdes::WIN_HAMMING) || (d_wintype > gr::filter::firdes::WIN_FLATTOP))
+    if ((d_wintype < gr::fft::window::WIN_HAMMING) || (d_wintype > gr::fft::window::WIN_FLATTOP))
     {
-        d_wintype = gr::filter::firdes::WIN_HAMMING;
+        d_wintype = gr::fft::window::WIN_HAMMING;
     }
 
     d_window.clear();
-    d_window = gr::filter::firdes::window((gr::filter::firdes::win_type)d_wintype, d_fftsize, 6.76);
+    d_window = gr::fft::window::build((gr::fft::window::win_type)d_wintype, d_fftsize, 6.76);
 }
 
 /*! \brief Get currently used window type. */

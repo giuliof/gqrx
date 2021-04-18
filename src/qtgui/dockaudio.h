@@ -1,7 +1,7 @@
 /* -*- c++ -*- */
 /*
  * Gqrx SDR: Software defined radio receiver powered by GNU Radio and Qt
- *           http://gqrx.dk/
+ *           https://gqrx.dk/
  *
  * Copyright 2011-2016 Alexandru Csete OZ9AEC.
  *
@@ -52,6 +52,7 @@ public:
 
     void setFftRange(quint64 minf, quint64 maxf);
     void setNewFftData(float *fftData, int size);
+    void setInvertScrolling(bool enabled);
     int  fftRate() const { return 10; }
 
     void setAudioGain(int gain);
@@ -125,6 +126,11 @@ private:
     bool           autoSpan;     /*! Whether to allow mode-dependent auto span. */
 
     qint64         rx_freq;      /*! RX frequency used in filenames. */
+
+    void           recordToggleShortcut();
+    void           muteToggleShortcut();
+    void           increaseAudioGainShortcut();
+    void           decreaseAudioGainShortcut();
 };
 
 #endif // DOCKAUDIO_H

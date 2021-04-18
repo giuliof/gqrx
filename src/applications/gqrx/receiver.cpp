@@ -1,7 +1,7 @@
 /* -*- c++ -*- */
 /*
  * Gqrx SDR: Software defined radio receiver powered by GNU Radio and Qt
- *           http://gqrx.dk/
+ *           https://gqrx.dk/
  *
  * Copyright 2011-2014 Alexandru Csete OZ9AEC.
  *
@@ -22,11 +22,7 @@
  */
 #include <cmath>
 #include <iostream>
-#ifndef _MSC_VER
-#include <unistd.h>
-#endif
-
-#include <iostream>
+#include <QDebug>
 
 #include <gnuradio/prefs.h>
 #include <gnuradio/top_block.h>
@@ -35,7 +31,6 @@
 
 #include "applications/gqrx/receiver.h"
 #include "dsp/correct_iq_cc.h"
-//#include "dsp/hbf_decim.h"
 #include "dsp/filter/fir_decim.h"
 #include "dsp/rx_fft.h"
 #include "receivers/nbrx.h"
@@ -53,7 +48,7 @@
 #define TARGET_QUAD_RATE 1e6
 
 /**
- * @brief Public contructor.
+ * @brief Public constructor.
  * @param input_device Input device specifier.
  * @param audio_device Audio output device specifier,
  *                     e.g. hw:0 when using ALSA or Portaudio.
@@ -118,9 +113,9 @@ receiver::receiver(const std::string input_device,
 
     iq_swap = make_iq_swap_cc(false);
     dc_corr = make_dc_corr_cc(d_decim_rate, 1.0);
-    iq_fft = make_rx_fft_c(8192u, d_decim_rate, gr::filter::firdes::WIN_HANN);
+    iq_fft = make_rx_fft_c(8192u, d_decim_rate, gr::fft::window::WIN_HANN);
 
-    audio_fft = make_rx_fft_f(8192u, gr::filter::firdes::WIN_HANN);
+    audio_fft = make_rx_fft_f(8192u, d_audio_rate, gr::fft::window::WIN_HANN);
     audio_gain0 = gr::blocks::multiply_const_ff::make(0);
     audio_gain1 = gr::blocks::multiply_const_ff::make(0);
     set_af_gain(DEFAULT_AUDIO_GAIN);
@@ -145,12 +140,9 @@ receiver::receiver(const std::string input_device,
 
     set_demod(RX_DEMOD_NFM);
 
-#ifndef QT_NO_DEBUG_OUTPUT
     gr::prefs pref;
-    std::cout << "Using audio backend: "
-              << pref.get_string("audio", "audio_module", "N/A")
-              << std::endl;
-#endif
+    qDebug() << "Using audio backend:"
+             << pref.get_string("audio", "audio_module", "N/A").c_str();
 }
 
 receiver::~receiver()
@@ -182,27 +174,18 @@ void receiver::stop()
 
 /**
  * @brief Select new input device.
- *
- * @bug When using ALSA, program will crash if the new device
- *      is the same as the previously used device:
- *      audio_alsa_source[hw:1]: Device or resource busy
+ * @param device
  */
 void receiver::set_input_device(const std::string device)
 {
+    qDebug() << "Set input device:";
+    qDebug() << "  old:" << input_devstr.c_str();
+    qDebug() << "  new:" << device.c_str();
+
     std::string error = "";
 
     if (device.empty())
         return;
-
-    if (input_devstr.compare(device) == 0)
-    {
-#ifndef QT_NO_DEBUG_OUTPUT
-        std::cout << "No change in input device:" << std::endl
-                  << "  old: " << input_devstr << std::endl
-                  << "  new: " << device << std::endl;
-#endif
-        return;
-    }
 
     input_devstr = device;
 
@@ -229,7 +212,7 @@ void receiver::set_input_device(const std::string device)
     {
         src = osmosdr::source::make(device);
     }
-    catch (std::runtime_error &x)
+    catch (std::exception &x)
     {
         error = x.what();
         src = osmosdr::source::make("file="+get_random_file()+",freq=428e6,rate=96000,repeat=true,throttle=true");
@@ -258,24 +241,15 @@ void receiver::set_input_device(const std::string device)
 }
 
 
-/** Select new audio output device. */
+/**
+ * @brief Select new audio output device.
+ * @param device
+ */
 void receiver::set_output_device(const std::string device)
 {
-    if (output_devstr.compare(device) == 0)
-    {
-#ifndef QT_NO_DEBUG_OUTPUT
-        std::cout << "No change in output device:" << std::endl
-                  << "  old: " << output_devstr << std::endl
-                  << "  new: " << device << std::endl;
-#endif
-        return;
-    }
-
-#ifndef QT_NO_DEBUG_OUTPUT
-    std::cout << "New audio output device:" << std::endl
-              << "   old: " << output_devstr << std::endl
-              << "   new: " << device << std::endl;
-#endif
+    qDebug() << "Set output device:";
+    qDebug() << "   old:" << output_devstr.c_str();
+    qDebug() << "   new:" << device.c_str();
 
     output_devstr = device;
 
@@ -288,21 +262,28 @@ void receiver::set_output_device(const std::string device)
     }
     audio_snk.reset();
 
+    try {
 #ifdef WITH_PULSEAUDIO
-    audio_snk = make_pa_sink(device, d_audio_rate, "GQRX", "Audio output");
+        audio_snk = make_pa_sink(device, d_audio_rate, "GQRX", "Audio output");
 #elif WITH_PORTAUDIO
-    audio_snk = make_portaudio_sink(device, d_audio_rate, "GQRX", "Audio output");
+        audio_snk = make_portaudio_sink(device, d_audio_rate, "GQRX", "Audio output");
 #else
-    audio_snk = gr::audio::sink::make(d_audio_rate, device, true);
+        audio_snk = gr::audio::sink::make(d_audio_rate, device, true);
 #endif
 
-    if (d_demod != RX_DEMOD_OFF)
-    {
-        tb->connect(audio_gain0, 0, audio_snk, 0);
-        tb->connect(audio_gain1, 0, audio_snk, 1);
-    }
+        if (d_demod != RX_DEMOD_OFF)
+        {
+            tb->connect(audio_gain0, 0, audio_snk, 0);
+            tb->connect(audio_gain1, 0, audio_snk, 1);
+        }
 
-    tb->unlock();
+        tb->unlock();
+
+    } catch (std::exception &x) {
+        tb->unlock();
+        // handle problems on non-freeing devices
+        throw x;
+    }
 }
 
 /** Get a list of available antenna connectors. */
@@ -311,7 +292,7 @@ std::vector<std::string> receiver::get_antennas(void) const
     return src->get_antennas();
 }
 
-/** Select antenna conenctor. */
+/** Select antenna connector. */
 void receiver::set_antenna(const std::string &antenna)
 {
     if (!antenna.empty())
@@ -337,7 +318,14 @@ double receiver::set_input_rate(double rate)
             * std::numeric_limits<double>::epsilon());
 
     tb->lock();
-    d_input_rate = src->set_sample_rate(rate);
+    try
+    {
+        d_input_rate = src->set_sample_rate(rate);
+    }
+    catch (std::runtime_error &e)
+    {
+        d_input_rate = 0;
+    }
 
     if (d_input_rate == 0)
     {
@@ -489,9 +477,7 @@ void receiver::set_dc_cancel(bool enable)
 
     // until we have a way to switch on/off
     // inside the dc_corr_cc we do a reconf
-    rx_demod demod = d_demod;
-    d_demod = RX_DEMOD_OFF;
-    set_demod(demod);
+    set_demod(d_demod, true);
 }
 
 /**
@@ -598,7 +584,7 @@ std::vector<std::string> receiver::get_gain_names()
  * @param[out] stop  Upper limit for this gain setting.
  * @param[out] step  The resolution for this gain setting.
  *
- * This function retunrs the range for the requested gain stage.
+ * This function returns the range for the requested gain stage.
  */
 receiver::status receiver::get_gain_range(std::string &name, double *start,
                                           double *stop, double *step) const
@@ -852,15 +838,12 @@ receiver::status receiver::set_agc_manual_gain(int gain)
     return STATUS_OK; // FIXME
 }
 
-receiver::status receiver::set_demod(rx_demod demod)
+receiver::status receiver::set_demod(rx_demod demod, bool force)
 {
     status ret = STATUS_OK;
 
-    // Allow reconf using same demod to provide a workaround
-    // for the "jerky streaming" we may experience with rtl
-    // dongles (the jerkyness disappears when we run this function)
-    //if (demod == d_demod)
-    //    return ret;
+    if (!force && (demod == d_demod))
+        return ret;
 
     // tb->lock() seems to hang occasioanlly
     if (d_running)
@@ -885,6 +868,11 @@ receiver::status receiver::set_demod(rx_demod demod)
     case RX_DEMOD_AM:
         connect_all(RX_CHAIN_NBRX);
         rx->set_demod(nbrx::NBRX_DEMOD_AM);
+        break;
+
+    case RX_DEMOD_AMSYNC:
+        connect_all(RX_CHAIN_NBRX);
+        rx->set_demod(nbrx::NBRX_DEMOD_AMSYNC);
         break;
 
     case RX_DEMOD_NFM:
@@ -953,6 +941,22 @@ receiver::status receiver::set_am_dcr(bool enabled)
     return STATUS_OK;
 }
 
+receiver::status receiver::set_amsync_dcr(bool enabled)
+{
+    if (rx->has_amsync())
+        rx->set_amsync_dcr(enabled);
+
+    return STATUS_OK;
+}
+
+receiver::status receiver::set_amsync_pll_bw(float pll_bw)
+{
+    if (rx->has_amsync())
+        rx->set_amsync_pll_bw(pll_bw);
+
+    return STATUS_OK;
+}
+
 receiver::status receiver::set_af_gain(float gain_db)
 {
     float k;
@@ -995,9 +999,15 @@ receiver::status receiver::start_audio_recording(const std::string filename)
 
     // if this fails, we don't want to go and crash now, do we
     try {
+#if GNURADIO_VERSION < 0x030900
         wav_sink = gr::blocks::wavfile_sink::make(filename.c_str(), 2,
                                                   (unsigned int) d_audio_rate,
                                                   16);
+#else
+        wav_sink = gr::blocks::wavfile_sink::make(filename.c_str(), 2,
+                                                  (unsigned int) d_audio_rate,
+                                                  gr::blocks::FORMAT_WAV, gr::blocks::FORMAT_PCM_16);
+#endif
     }
     catch (std::runtime_error &e) {
         std::cout << "Error opening " << filename << ": " << e.what() << std::endl;
@@ -1368,16 +1378,30 @@ void receiver::get_rds_data(std::string &outbuff, int &num)
 
 void receiver::start_rds_decoder(void)
 {
-    stop();
-    rx->start_rds_decoder();
-    start();
+    if (d_running)
+    {
+        stop();
+        rx->start_rds_decoder();
+        start();
+    }
+    else
+    {
+        rx->start_rds_decoder();
+    }
 }
 
 void receiver::stop_rds_decoder(void)
 {
-    stop();
-    rx->stop_rds_decoder();
-    start();
+    if (d_running)
+    {
+        stop();
+        rx->stop_rds_decoder();
+        start();
+    }
+    else
+    {
+        rx->stop_rds_decoder();
+    }
 }
 
 bool receiver::is_rds_decoder_active(void) const

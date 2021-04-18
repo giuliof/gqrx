@@ -1,7 +1,7 @@
 /* -*- c++ -*- */
 /*
  * Gqrx SDR: Software defined radio receiver powered by GNU Radio and Qt
- *           http://gqrx.dk/
+ *           https://gqrx.dk/
  *
  * Copyright 2013 Christian Lindner DL2VCL, Stefano Leucci.
  *
@@ -50,6 +50,7 @@ private:
     QMenu*             contextmenu;
     qint64             m_currentFrequency;
     bool               m_updating;
+    BookmarksTableModel *bookmarksTableModel;
 
     bool eventFilter(QObject* object, QEvent* event);
 
@@ -59,7 +60,6 @@ public:
 
     // ui->tableViewFrequencyList
     // ui->tableWidgetTagList
-    BookmarksTableModel *bookmarksTableModel;
     QAction* actionAddBookmark;
 
     void updateTags();

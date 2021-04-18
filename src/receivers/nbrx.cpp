@@ -1,7 +1,7 @@
 /* -*- c++ -*- */
 /*
  * Gqrx SDR: Software defined radio receiver powered by GNU Radio and Qt
- *           http://gqrx.dk/
+ *           https://gqrx.dk/
  *
  * Copyright 2011-2016 Alexandru Csete OZ9AEC.
  *
@@ -22,9 +22,10 @@
  */
 #include <cmath>
 #include <iostream>
+#include <QDebug>
 #include "receivers/nbrx.h"
 
-// NB: Remeber to adjust filter ranges in MainWindow
+// NB: Remember to adjust filter ranges in MainWindow
 #define PREF_QUAD_RATE  96000.f
 
 nbrx_sptr make_nbrx(float quad_rate, float audio_rate)
@@ -50,6 +51,7 @@ nbrx::nbrx(float quad_rate, float audio_rate)
     demod_ssb = gr::blocks::complex_to_real::make(1);
     demod_fm = make_rx_demod_fm(PREF_QUAD_RATE, 5000.0, 75.0e-6);
     demod_am = make_rx_demod_am(PREF_QUAD_RATE, true);
+    demod_amsync = make_rx_demod_amsync(PREF_QUAD_RATE, true, 0.001);
 
     audio_rr0.reset();
     audio_rr1.reset();
@@ -102,9 +104,7 @@ void nbrx::set_quad_rate(float quad_rate)
 {
     if (std::abs(d_quad_rate-quad_rate) > 0.5)
     {
-#ifndef QT_NO_DEBUG_OUTPUT
-        std::cout << "Changing NB_RX quad rate: "  << d_quad_rate << " -> " << quad_rate << std::endl;
-#endif
+        qDebug() << "Changing NB_RX quad rate:"  << d_quad_rate << "->" << quad_rate;
         d_quad_rate = quad_rate;
         lock();
         iq_resamp->set_rate(PREF_QUAD_RATE/d_quad_rate);
@@ -256,6 +256,11 @@ void nbrx::set_demod(int rx_demod)
         demod = demod_am;
         break;
 
+    case NBRX_DEMOD_AMSYNC:
+        d_demod = NBRX_DEMOD_AMSYNC;
+        demod = demod_amsync;
+        break;
+
     case NBRX_DEMOD_FM:
     default:
         d_demod = NBRX_DEMOD_FM;
@@ -310,4 +315,14 @@ void nbrx::set_fm_deemph(double tau)
 void nbrx::set_am_dcr(bool enabled)
 {
     demod_am->set_dcr(enabled);
+}
+
+void nbrx::set_amsync_dcr(bool enabled)
+{
+    demod_amsync->set_dcr(enabled);
+}
+
+void nbrx::set_amsync_pll_bw(float pll_bw)
+{
+    demod_amsync->set_pll_bw(pll_bw);
 }

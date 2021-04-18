@@ -1,7 +1,7 @@
 /* -*- c++ -*- */
 /*
  * Gqrx SDR: Software defined radio receiver powered by GNU Radio and Qt
- *           http://gqrx.dk/
+ *           https://gqrx.dk/
  *
  * Copyright 2011 Alexandru Csete OZ9AEC.
  *
@@ -24,6 +24,7 @@
 #include <gnuradio/io_signature.h>
 #include <iostream>
 #include <math.h>
+#include <QDebug>
 
 #include "dsp/rx_demod_fm.h"
 
@@ -34,7 +35,7 @@ rx_demod_fm_sptr make_rx_demod_fm(float quad_rate, float max_dev, double tau)
     return gnuradio::get_initial_sptr(new rx_demod_fm(quad_rate, max_dev, tau));
 }
 
-static const int MIN_IN = 1;  /* Mininum number of input streams. */
+static const int MIN_IN = 1;  /* Minimum number of input streams. */
 static const int MAX_IN = 1;  /* Maximum number of input streams. */
 static const int MIN_OUT = 1; /* Minimum number of output streams. */
 static const int MAX_OUT = 1; /* Maximum number of output streams. */
@@ -51,9 +52,7 @@ rx_demod_fm::rx_demod_fm(float quad_rate, float max_dev, double tau)
     /* demodulator gain */
     gain = d_quad_rate / (2.0 * M_PI * d_max_dev);
 
-#ifndef QT_NO_DEBUG_OUTPUT
-    std::cerr << "FM demod gain: " << gain << std::endl;
-#endif
+    qDebug() << "FM demod gain:" << gain;
 
     /* demodulator */
     d_quad = gr::analog::quadrature_demod_cf::make(gain);
@@ -96,7 +95,7 @@ void rx_demod_fm::set_max_dev(float max_dev)
 }
 
 /*! \brief Set FM de-emphasis time constant.
- *  \param tau The new time costant.
+ *  \param tau The new time constant.
  */
 void rx_demod_fm::set_tau(double tau)
 {

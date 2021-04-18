@@ -13,8 +13,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
         add_subdirectory(osxaudio)
     endif()
     add_definitions(-DGQRX_OS_MACX)
-    set(CMAKE_OSX_DEPLOYMENT_TARGET 10.9)
-elseif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+elseif(${CMAKE_SYSTEM_NAME} MATCHES "Linux|FreeBSD")
     if(${LINUX_AUDIO_BACKEND} MATCHES "Pulseaudio")
         add_subdirectory(pulseaudio)
     elseif(${LINUX_AUDIO_BACKEND} MATCHES "Portaudio")
@@ -71,7 +70,7 @@ target_link_libraries(${PROJECT_NAME}
     ${PULSEAUDIO_LIBRARY}
     ${PULSE-SIMPLE}
     ${PORTAUDIO_LIBRARIES}
-    volk
+    ${VOLK_LIBRARIES}
 )
 
 if(NOT Gnuradio_VERSION VERSION_LESS "3.8")
@@ -81,7 +80,7 @@ if(NOT Gnuradio_VERSION VERSION_LESS "3.8")
         gnuradio::gnuradio-digital
         gnuradio::gnuradio-filter
         gnuradio::gnuradio-audio
-        volk
+        Volk::volk
     )
 endif()
 

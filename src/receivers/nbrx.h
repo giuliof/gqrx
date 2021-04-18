@@ -1,7 +1,7 @@
 /* -*- c++ -*- */
 /*
  * Gqrx SDR: Software defined radio receiver powered by GNU Radio and Qt
- *           http://gqrx.dk/
+ *           https://gqrx.dk/
  *
  * Copyright 2011-2016 Alexandru Csete OZ9AEC.
  *
@@ -39,7 +39,11 @@
 
 class nbrx;
 
+#if GNURADIO_VERSION < 0x030900
 typedef boost::shared_ptr<nbrx> nbrx_sptr;
+#else
+typedef std::shared_ptr<nbrx> nbrx_sptr;
+#endif
 
 /*! \brief Public constructor of nbrx_sptr. */
 nbrx_sptr make_nbrx(float quad_rate, float audio_rate);
@@ -58,7 +62,8 @@ public:
         NBRX_DEMOD_AM   = 1,  /*!< Amplitude modulation. */
         NBRX_DEMOD_FM   = 2,  /*!< Frequency modulation. */
         NBRX_DEMOD_SSB  = 3,  /*!< Single Side Band. */
-        NBRX_DEMOD_NUM  = 4   /*!< Included for convenience. */
+        NBRX_DEMOD_AMSYNC = 4, /*!< Amplitude modulation (synchronous demod). */
+        NBRX_DEMOD_NUM  = 5   /*!< Included for convenience. */
     };
 
 public:
@@ -106,6 +111,11 @@ public:
     bool has_am() { return true; }
     void set_am_dcr(bool enabled);
 
+    /* AM-Sync parameters */
+    bool has_amsync() { return true; }
+    void set_amsync_dcr(bool enabled);
+    void set_amsync_pll_bw(float pll_bw);
+
 private:
     bool   d_running;          /*!< Whether receiver is running or not. */
     float  d_quad_rate;        /*!< Input sample rate. */
@@ -124,6 +134,7 @@ private:
     gr::blocks::complex_to_real::sptr   demod_ssb;  /*!< SSB demodulator. */
     rx_demod_fm_sptr          demod_fm;   /*!< FM demodulator. */
     rx_demod_am_sptr          demod_am;   /*!< AM demodulator. */
+    rx_demod_amsync_sptr      demod_amsync;   /*!< AM-Sync demodulator. */
     resampler_ff_sptr         audio_rr0;  /*!< Audio resampler. */
     resampler_ff_sptr         audio_rr1;  /*!< Audio resampler. */
 

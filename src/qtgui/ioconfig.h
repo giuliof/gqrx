@@ -1,7 +1,7 @@
 /* -*- c++ -*- */
 /*
  * Gqrx SDR: Software defined radio receiver powered by GNU Radio and Qt
- *           http://gqrx.dk/
+ *           https://gqrx.dk/
  *
  * Copyright 2011-2014 Alexandru Csete OZ9AEC.
  *
@@ -31,7 +31,7 @@
 #include "pulseaudio/pa_device_list.h"
 #elif WITH_PORTAUDIO
 #include "portaudio/device_list.h"
-#elif defined(GQRX_OS_MACX)
+#elif defined(Q_OS_DARWIN)
 #include "osxaudio/device_list.h"
 #endif
 
@@ -56,22 +56,27 @@ private slots:
     void inputDevstrChanged(const QString &text);
     void inputRateChanged(const QString &text);
     void decimationChanged(int index);
+    void onScanButtonClicked();
 
 private:
     void updateInputSampleRates(int rate);
     void updateDecimations(void);
+    void updateInDev(const QSettings *settings, const std::map<QString, QVariant> &devList);
+    void updateOutDev();
     int  idx2decim(int idx) const;
     int  decim2idx(int decim) const;
 
 private:
     Ui::CIoConfig  *ui;
     QSettings      *m_settings;
+    QPushButton    *m_scanButton;
+    std::map<QString, QVariant> *m_devList; // will point to devList from constructor
 
 #ifdef WITH_PULSEAUDIO
     vector<pa_device>           outDevList;
 #elif WITH_PORTAUDIO
     vector<portaudio_device>    outDevList;
-#elif defined(GQRX_OS_MACX)
+#elif defined(Q_OS_DARWIN)
     vector<osxaudio_device>     outDevList;
 #endif
 

@@ -51,11 +51,17 @@ public:
         m_ResetLowerDigits = reset;
     }
 
+    void setInvertScrolling(bool invert)
+    {
+        m_InvertScrolling = invert;
+    }
+
 signals:
     void    newFrequency(qint64 freq); // emitted when frequency has changed
 
 public slots:
     void    setFrequency(qint64 freq);
+    void    setFrequencyFocus();
 
 protected:
     void    paintEvent(QPaintEvent *);
@@ -87,6 +93,7 @@ private:
 
     bool        m_ResetLowerDigits; /* If TRUE digits below the active one will be reset to 0
                                      *  when the active digit is incremented or decremented. */
+    bool        m_InvertScrolling;
 
     int         m_FirstEditableDigit;
     int         m_LastLeadZeroPos;

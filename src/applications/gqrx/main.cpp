@@ -1,7 +1,7 @@
 /* -*- c++ -*- */
 /*
  * Gqrx SDR: Software defined radio receiver powered by GNU Radio and Qt
- *           http://gqrx.dk/
+ *           https://gqrx.dk/
  *
  * Copyright 2011-2013 Alexandru Csete OZ9AEC.
  *
@@ -21,14 +21,12 @@
  * Boston, MA 02110-1301, USA.
  */
 #include <QApplication>
-#include <QDebug>
-#include <QDesktopServices>
+#include <QCommandLineParser>
 #include <QDir>
 #include <QFile>
 #include <QMessageBox>
 #include <QString>
 #include <QStringList>
-#include <QStyleFactory>
 #include <QtGlobal>
 
 #ifdef WITH_PORTAUDIO
@@ -43,18 +41,13 @@
 #include "gqrx.h"
 
 #include <iostream>
-#include <boost/program_options.hpp>
-namespace po = boost::program_options;
 
 static void reset_conf(const QString &file_name);
-static void list_conf(void);
+static void list_conf();
 
 int main(int argc, char *argv[])
 {
     QString         cfg_file;
-    std::string     conf;
-    std::string     style;
-    bool            clierr = false;
     bool            edit_conf = false;
     int             return_code = 0;
 
@@ -63,6 +56,13 @@ int main(int argc, char *argv[])
     QCoreApplication::setOrganizationDomain(GQRX_ORG_DOMAIN);
     QCoreApplication::setApplicationName(GQRX_APP_NAME);
     QCoreApplication::setApplicationVersion(VERSION);
+    QCoreApplication::setAttribute(Qt::AA_UseHighDpiPixmaps, true);
+    QLoggingCategory::setFilterRules("*.debug=false");
+
+    QString plugin_path = QDir::cleanPath(QCoreApplication::applicationDirPath() + "/../soapy-modules");
+    QFileInfo plugin_path_info(plugin_path);
+    if (plugin_path_info.isDir())
+        qputenv("SOAPY_SDR_PLUGIN_PATH", plugin_path.toUtf8());
 
     // setup controlport via environment variables
     // see http://lists.gnu.org/archive/html/discuss-gnuradio/2013-05/msg00270.html
@@ -72,47 +72,22 @@ int main(int argc, char *argv[])
     else
         qDebug() << "Failed to disable controlport";
 
-    // setup the program options
-    po::options_description desc("Command line options");
-    desc.add_options()
-            ("help,h", "This help message")
-            ("style,s", po::value<std::string>(&style), "Use the give style (fusion, windows)")
-            ("list,l", "List existing configurations")
-            ("conf,c", po::value<std::string>(&conf), "Start with this config file")
-            ("edit,e", "Edit the config file before using it")
-            ("reset,r", "Reset configuration file")
-    ;
+    QCommandLineParser parser;
+    parser.setApplicationDescription("Gqrx software defined radio receiver " VERSION);
+    parser.addHelpOption();
+    parser.addOptions({
+        {{"s", "style"}, "Use the given style (fusion, windows)", "style"},
+        {{"l", "list"}, "List existing configurations"},
+        {{"c", "conf"}, "Start with this config file", "file"},
+        {{"e", "edit"}, "Edit the config file before using it"},
+        {{"r", "reset"}, "Reset configuration file"},
+    });
+    parser.process(app);
 
-    po::variables_map vm;
-    try
-    {
-        po::store(po::parse_command_line(argc, argv, desc), vm);
-    }
-    catch(const boost::program_options::invalid_command_line_syntax& ex)
-    {
-        /* happens if e.g. -c without file name */
-        clierr = true;
-    }
-    catch(const boost::program_options::unknown_option& ex)
-    {
-        /* happens if e.g. -c without file name */
-        clierr = true;
-    }
+    if (parser.isSet("style"))
+        QApplication::setStyle(parser.value("style"));
 
-    po::notify(vm);
-
-    // print the help message
-    if (vm.count("help") || clierr)
-    {
-        std::cout << "Gqrx software defined radio receiver " << VERSION << std::endl;
-        std::cout << desc << std::endl;
-        return 1;
-    }
-
-    if (vm.count("style"))
-        QApplication::setStyle(QString::fromStdString(style));
-
-    if (vm.count("list"))
+    if (parser.isSet("list"))
     {
         list_conf();
         return 0;
@@ -125,7 +100,7 @@ int main(int argc, char *argv[])
     {
         QString message = QString("Portaudio error: %1").arg(Pa_GetErrorText(err));
         qCritical() << message;
-        QMessageBox::critical(0, "Audio Error", message,
+        QMessageBox::critical(nullptr, "Audio Error", message,
                               QMessageBox::Abort, QMessageBox::NoButton);
         return 1;
     }
@@ -153,9 +128,9 @@ int main(int argc, char *argv[])
 #endif
 
 
-    if (!conf.empty())
+    if (parser.isSet("conf"))
     {
-        cfg_file = QString::fromStdString(conf);
+        cfg_file = parser.value("conf");
         qDebug() << "User specified config file:" << cfg_file;
     }
     else
@@ -164,9 +139,9 @@ int main(int argc, char *argv[])
         qDebug() << "No user supplied config file. Using" << cfg_file;
     }
 
-    if (vm.count("reset"))
+    if (parser.isSet("reset"))
         reset_conf(cfg_file);
-    else if (vm.count("edit"))
+    else if (parser.isSet("edit"))
         edit_conf = true;
 
     try {
@@ -178,10 +153,10 @@ int main(int argc, char *argv[])
         if (w.configOk)
         {
             w.show();
-            return_code = app.exec();
+            return_code = QApplication::exec();
         }
         else
-            {
+        {
             return_code = 1;
         }
     }
@@ -200,7 +175,7 @@ int main(int argc, char *argv[])
     Pa_Terminate();
 #endif
 
-    return  return_code;
+    return return_code;
 }
 
 /** Reset configuration file specified by file_name. */
@@ -228,7 +203,7 @@ static void reset_conf(const QString &file_name)
 }
 
 /** List available configurations. */
-static void list_conf(void)
+static void list_conf()
 {
     QString     conf_path;
     QByteArray  xdg_dir = qgetenv("XDG_CONFIG_HOME");

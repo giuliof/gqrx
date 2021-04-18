@@ -1,7 +1,7 @@
 /* -*- c++ -*- */
 /*
  * Gqrx SDR: Software defined radio receiver powered by GNU Radio and Qt
- *           http://gqrx.dk/
+ *           https://gqrx.dk/
  *
  * Copyright 2013 Alexandru Csete OZ9AEC.
  *
@@ -32,7 +32,11 @@
 
 class udp_sink_f;
 
+#if GNURADIO_VERSION < 0x030900
 typedef boost::shared_ptr<udp_sink_f> udp_sink_f_sptr;
+#else
+typedef std::shared_ptr<udp_sink_f> udp_sink_f_sptr;
+#endif
 
 udp_sink_f_sptr make_udp_sink_f(void);
 

@@ -1,7 +1,7 @@
 /* -*- c++ -*- */
 /*
  * Gqrx SDR: Software defined radio receiver powered by GNU Radio and Qt
- *           http://gqrx.dk/
+ *           https://gqrx.dk/
  *
  * Copyright 2011-2016 Alexandru Csete OZ9AEC.
  *
@@ -23,6 +23,7 @@
 #include <cmath>
 #include <QDebug>
 #include <QDateTime>
+#include <QShortcut>
 #include <QDir>
 #include "dockaudio.h"
 #include "ui_dockaudio.h"
@@ -36,14 +37,6 @@ DockAudio::DockAudio(QWidget *parent) :
     rx_freq(144000000)
 {
     ui->setupUi(this);
-
-#ifdef Q_OS_MAC
-    // Workaround for Mac, see http://stackoverflow.com/questions/3978889/why-is-qhboxlayout-causing-widgets-to-overlap
-    // Might be fixed in Qt 5?
-    ui->audioPlayButton->setAttribute(Qt::WA_LayoutUsesWidgetRect);
-    ui->audioRecButton->setAttribute(Qt::WA_LayoutUsesWidgetRect);
-    ui->audioConfButton->setAttribute(Qt::WA_LayoutUsesWidgetRect);
-#endif
 
 #ifdef Q_OS_LINUX
     // buttons can be smaller than 50x32
@@ -64,6 +57,8 @@ DockAudio::DockAudio(QWidget *parent) :
     connect(audioOptions, SIGNAL(newUdpPort(int)), this, SLOT(setNewUdpPort(int)));
     connect(audioOptions, SIGNAL(newUdpStereo(bool)), this, SLOT(setNewUdpStereo(bool)));
 
+    connect(ui->audioSpectrum, SIGNAL(pandapterRangeChanged(float,float)), audioOptions, SLOT(setPandapterSliderValues(float,float)));
+
     ui->audioSpectrum->setFreqUnits(1000);
     ui->audioSpectrum->setSampleRate(48000);  // Full bandwidth
     ui->audioSpectrum->setSpanFreq(12000);
@@ -74,10 +69,21 @@ DockAudio::DockAudio(QWidget *parent) :
     ui->audioSpectrum->setFilterBoxEnabled(false);
     ui->audioSpectrum->setCenterLineEnabled(false);
     ui->audioSpectrum->setBookmarksEnabled(false);
+    ui->audioSpectrum->setBandPlanEnabled(false);
     ui->audioSpectrum->setFftRange(-80., 0.);
     ui->audioSpectrum->setVdivDelta(40);
     ui->audioSpectrum->setHdivDelta(40);
     ui->audioSpectrum->setFreqDigits(1);
+
+    QShortcut *rec_toggle_shortcut = new QShortcut(QKeySequence(Qt::Key_R), this);
+    QShortcut *mute_toggle_shortcut = new QShortcut(QKeySequence(Qt::Key_M), this);
+    QShortcut *audio_gain_increase_shortcut1 = new QShortcut(QKeySequence(Qt::Key_Plus), this);
+    QShortcut *audio_gain_decrease_shortcut1 = new QShortcut(QKeySequence(Qt::Key_Minus), this);
+
+    QObject::connect(rec_toggle_shortcut, &QShortcut::activated, this, &DockAudio::recordToggleShortcut);
+    QObject::connect(mute_toggle_shortcut, &QShortcut::activated, this, &DockAudio::muteToggleShortcut);
+    QObject::connect(audio_gain_increase_shortcut1, &QShortcut::activated, this, &DockAudio::increaseAudioGainShortcut);
+    QObject::connect(audio_gain_decrease_shortcut1, &QShortcut::activated, this, &DockAudio::decreaseAudioGainShortcut);
 }
 
 DockAudio::~DockAudio()
@@ -101,6 +107,11 @@ void DockAudio::setFftRange(quint64 minf, quint64 maxf)
 void DockAudio::setNewFftData(float *fftData, int size)
 {
     ui->audioSpectrum->setNewFftData(fftData, size);
+}
+
+void DockAudio::setInvertScrolling(bool enabled)
+{
+    ui->audioSpectrum->setInvertScrolling(enabled);
 }
 
 /*! \brief Set new audio gain.
@@ -199,7 +210,7 @@ void DockAudio::on_audioStreamButton_clicked(bool checked)
  *  \param checked Whether recording is ON or OFF.
  *
  * We use the clicked signal instead of the toggled which allows us to change the
- * state programatically using toggle() without triggering the signal.
+ * state programmatically using toggle() without triggering the signal.
  */
 void DockAudio::on_audioRecButton_clicked(bool checked)
 {
@@ -208,14 +219,17 @@ void DockAudio::on_audioRecButton_clicked(bool checked)
         // use toUTC() function compatible with older versions of Qt.
         QString file_name = QDateTime::currentDateTime().toUTC().toString("gqrx_yyyyMMdd_hhmmss");
         last_audio = QString("%1/%2_%3.wav").arg(rec_dir).arg(file_name).arg(rx_freq);
+        QFileInfo info(last_audio);
 
         // emit signal and start timer
         emit audioRecStarted(last_audio);
 
+        ui->audioRecLabel->setText(info.fileName());
         ui->audioRecButton->setToolTip(tr("Stop audio recorder"));
         ui->audioPlayButton->setEnabled(false); /* prevent playback while recording */
     }
     else {
+        ui->audioRecLabel->setText("<i>DSP</i>");
         ui->audioRecButton->setToolTip(tr("Start audio recorder"));
         emit audioRecStopped();
 
@@ -227,7 +241,7 @@ void DockAudio::on_audioRecButton_clicked(bool checked)
  *  \param checked Whether playback is ON or OFF.
  *
  * We use the clicked signal instead of the toggled which allows us to change the
- * state programatically using toggle() without triggering the signal.
+ * state programmatically using toggle() without triggering the signal.
  */
 void DockAudio::on_audioPlayButton_clicked(bool checked)
 {
@@ -348,6 +362,11 @@ void DockAudio::saveSettings(QSettings *settings)
     else
         settings->remove("waterfall_max_db");
 
+    if (audioOptions->getLockButtonState())
+        settings->setValue("db_ranges_locked", true);
+    else
+        settings->remove("db_ranges_locked");
+
     if (rec_dir != QDir::homePath())
         settings->setValue("rec_dir", rec_dir);
     else
@@ -373,7 +392,7 @@ void DockAudio::saveSettings(QSettings *settings)
 
 void DockAudio::readSettings(QSettings *settings)
 {
-    int     ival, fft_min, fft_max;
+    int     bool_val, ival, fft_min, fft_max;
     bool    conv_ok = false;
 
     if (!settings)
@@ -404,6 +423,9 @@ void DockAudio::readSettings(QSettings *settings)
     if (!conv_ok)
         fft_max = 0;
     audioOptions->setWaterfallRange(fft_min, fft_max);
+
+    bool_val = settings->value("db_ranges_locked", false).toBool();
+    audioOptions->setLockButtonState(bool_val);
 
     // Location of audio recordings
     rec_dir = settings->value("rec_dir", QDir::homePath()).toString();
@@ -460,4 +482,20 @@ void DockAudio::setNewUdpPort(int port)
 void DockAudio::setNewUdpStereo(bool enabled)
 {
     udp_stereo = enabled;
+}
+
+void DockAudio::recordToggleShortcut() {
+    ui->audioRecButton->click();
+}
+
+void DockAudio::muteToggleShortcut() {
+    ui->audioMuteButton->click();
+}
+
+void DockAudio::increaseAudioGainShortcut() {
+	ui->audioGainSlider->triggerAction(QSlider::SliderPageStepAdd);
+}
+
+void DockAudio::decreaseAudioGainShortcut() {
+	ui->audioGainSlider->triggerAction(QSlider::SliderPageStepSub);
 }

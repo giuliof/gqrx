@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>302</width>
-    <height>534</height>
+    <width>368</width>
+    <height>444</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -18,7 +18,7 @@
   </property>
   <property name="minimumSize">
    <size>
-    <width>280</width>
+    <width>327</width>
     <height>200</height>
    </size>
   </property>
@@ -71,8 +71,8 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>284</width>
-         <height>497</height>
+         <width>350</width>
+         <height>407</height>
         </rect>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout">
@@ -109,7 +109,7 @@
            <number>0</number>
           </property>
           <property name="spacing">
-           <number>6</number>
+           <number>5</number>
           </property>
           <item row="0" column="2" colspan="2">
            <widget class="QLabel" name="fftRbwLabel">
@@ -303,7 +303,7 @@
              <bool>true</bool>
             </property>
             <property name="sizePolicy">
-             <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+             <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
@@ -820,7 +820,7 @@
           <item row="12" column="2">
            <widget class="QPushButton" name="fillButton">
             <property name="sizePolicy">
-             <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+             <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
@@ -851,7 +851,7 @@
             </property>
            </widget>
           </item>
-          <item row="14" column="0" colspan="4">
+          <item row="15" column="0" colspan="4">
            <spacer name="verticalSpacer">
             <property name="orientation">
              <enum>Qt::Vertical</enum>
@@ -939,8 +939,7 @@
              </size>
             </property>
             <property name="toolTip">
-             <string>&lt;html&gt;Number of FFT points to calculate. Higher values will require more CPU time. This will not influence the number of points on the display since that parameter is adjusted automatically according to the display size.
-&lt;/html&gt;</string>
+             <string>&lt;html&gt;Number of FFT points to calculate. Higher values will require more CPU time. This will not influence the number of points on the display since that parameter is adjusted automatically according to the display size.&lt;/html&gt;</string>
             </property>
             <property name="editable">
              <bool>false</bool>
@@ -1106,6 +1105,16 @@
              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
             </property>
            </widget>
+          </item>
+          <item row="14" column="0" colspan="4">
+            <widget class="QCheckBox" name="bandPlanCheckbox">
+              <property name="toolTip">
+                <string>Enable Band Plan on bottom of spectrum</string>
+              </property>
+              <property name="text">
+                <string>Enable Band Plan</string>
+              </property>
+            </widget>
           </item>
          </layout>
         </item>

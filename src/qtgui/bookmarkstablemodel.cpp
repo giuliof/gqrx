@@ -1,7 +1,7 @@
 /* -*- c++ -*- */
 /*
  * Gqrx SDR: Software defined radio receiver powered by GNU Radio and Qt
- *           http://gqrx.dk/
+ *           https://gqrx.dk/
  *
  * Copyright 2013 Christian Lindner DL2VCL, Stefano Leucci.
  *
@@ -168,7 +168,7 @@ bool BookmarksTableModel::setData(const QModelIndex &index, const QVariant &valu
 
 Qt::ItemFlags BookmarksTableModel::flags ( const QModelIndex& index ) const
 {
-    Qt::ItemFlags flags = 0;
+    Qt::ItemFlags flags = Qt::ItemFlags();
 
     switch(index.column())
     {
@@ -223,4 +223,3 @@ int BookmarksTableModel::GetBookmarksIndexForRow(int iRow)
 {
   return m_mapRowToBookmarksIndex[iRow];
 }
-

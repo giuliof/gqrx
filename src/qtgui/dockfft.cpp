@@ -1,7 +1,7 @@
 /* -*- c++ -*- */
 /*
  * Gqrx SDR: Software defined radio receiver powered by GNU Radio and Qt
- *           http://gqrx.dk/
+ *           https://gqrx.dk/
  *
  * Copyright 2011-2016 Alexandru Csete OZ9AEC.
  *
@@ -43,18 +43,6 @@ DockFft::DockFft(QWidget *parent) :
 {
     ui->setupUi(this);
 
-#ifdef Q_OS_MAC
-    // Is this really only needed on Mac to make the color picker button appear square like the other buttons?
-    ui->fillButton->setAttribute(Qt::WA_LayoutUsesWidgetRect);
-#if QT_VERSION < 0x050000
-    // Workaround for Mac, see http://stackoverflow.com/questions/3978889/why-is-qhboxlayout-causing-widgets-to-overlap
-    // Fixed in Qt 5?
-    ui->resetButton->setAttribute(Qt::WA_LayoutUsesWidgetRect);
-    ui->centerButton->setAttribute(Qt::WA_LayoutUsesWidgetRect);
-    ui->demodButton->setAttribute(Qt::WA_LayoutUsesWidgetRect);
-#endif
-#endif
-
 #ifdef Q_OS_LINUX
     // buttons can be smaller than 50x32
     ui->peakDetectionButton->setMinimumSize(48, 24);
@@ -79,6 +67,7 @@ DockFft::DockFft(QWidget *parent) :
     ui->colorPicker->insertColor(QColor(0x7F,0xFA,0xFA,0xFF), "Cyan");
 
     ui->cmapComboBox->addItem(tr("Gqrx"), "gqrx");
+    ui->cmapComboBox->addItem(tr("Viridis"), "viridis");
     ui->cmapComboBox->addItem(tr("Google Turbo"), "turbo");
     ui->cmapComboBox->addItem(tr("Plasma"), "plasma");
     ui->cmapComboBox->addItem(tr("White Hot Compressed"), "whitehotcompressed");
@@ -274,6 +263,12 @@ void DockFft::saveSettings(QSettings *settings)
     else
         settings->remove("db_ranges_locked");
 
+    // Band Plan
+    if (ui->bandPlanCheckbox->isChecked())
+        settings->setValue("bandplan", true);
+    else
+        settings->remove("bandplan");
+
     if (QString::compare(ui->cmapComboBox->currentData().toString(), DEFAULT_COLORMAP))
         settings->setValue("waterfall_colormap", ui->cmapComboBox->currentData().toString());
     else
@@ -345,6 +340,10 @@ void DockFft::readSettings(QSettings *settings)
 
     bool_val = settings->value("db_ranges_locked", false).toBool();
     ui->lockButton->setChecked(bool_val);
+
+    bool_val = settings->value("bandplan", false).toBool();
+    ui->bandPlanCheckbox->setChecked(bool_val);
+    emit bandPlanChanged(bool_val);
 
     QString cmap = settings->value("waterfall_colormap", "gqrx").toString();
     ui->cmapComboBox->setCurrentIndex(ui->cmapComboBox->findData(cmap));
@@ -520,6 +519,11 @@ void DockFft::on_peakHoldButton_toggled(bool checked)
 void DockFft::on_peakDetectionButton_toggled(bool checked)
 {
     emit peakDetectionToggled(checked);
+}
+
+void DockFft::on_bandPlanCheckbox_stateChanged(int state)
+{
+    emit bandPlanChanged(state == 2);
 }
 
 /** lock button toggled */

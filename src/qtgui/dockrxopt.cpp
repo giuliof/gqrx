@@ -1,7 +1,7 @@
 /* -*- c++ -*- */
 /*
  * Gqrx SDR: Software defined radio receiver powered by GNU Radio and Qt
- *           http://gqrx.dk/
+ *           https://gqrx.dk/
  *
  * Copyright 2011-2013 Alexandru Csete OZ9AEC.
  *
@@ -22,6 +22,8 @@
  */
 #include <QDebug>
 #include <QVariant>
+#include <QShortcut>
+#include <iostream>
 #include "dockrxopt.h"
 #include "ui_dockrxopt.h"
 
@@ -41,7 +43,8 @@ static const int filter_preset_table[DockRxOpt::MODE_LAST][3][2] =
     {{    100,   4000}, {   100,  2800}, {   300,  2400}},  // MODE_USB
     {{  -1000,   1000}, {  -250,   250}, {  -100,   100}},  // MODE_CWL
     {{  -1000,   1000}, {  -250,   250}, {  -100,   100}},  // MODE_CWU
-    {{-100000, 100000}, {-80000, 80000}, {-60000, 60000}}   // MODE_WFM_STEREO_OIRT
+    {{-100000, 100000}, {-80000, 80000}, {-60000, 60000}},  // MODE_WFM_STEREO_OIRT
+    {{ -10000,  10000}, { -5000,  5000}, { -2500,  2500}}   // MODE_AMSYNC
 };
 
 DockRxOpt::DockRxOpt(qint64 filterOffsetRange, QWidget *parent) :
@@ -66,17 +69,9 @@ DockRxOpt::DockRxOpt(qint64 filterOffsetRange, QWidget *parent) :
         ModulationStrings.append("CW-L");
         ModulationStrings.append("CW-U");
         ModulationStrings.append("WFM (oirt)");
+        ModulationStrings.append("AM-Sync");
     }
     ui->modeSelector->addItems(ModulationStrings);
-
-#ifdef Q_OS_MAC
-    // Workaround for Mac, see http://stackoverflow.com/questions/3978889/why-is-qhboxlayout-causing-widgets-to-overlap
-    // Might be fixed in Qt 5?
-    ui->modeButton->setAttribute(Qt::WA_LayoutUsesWidgetRect);
-    ui->agcButton->setAttribute(Qt::WA_LayoutUsesWidgetRect);
-    ui->autoSquelchButton->setAttribute(Qt::WA_LayoutUsesWidgetRect);
-    ui->resetSquelchButton->setAttribute(Qt::WA_LayoutUsesWidgetRect);
-#endif
 
 #ifdef Q_OS_LINUX
     ui->modeButton->setMinimumSize(32, 24);
@@ -102,6 +97,8 @@ DockRxOpt::DockRxOpt(qint64 filterOffsetRange, QWidget *parent) :
     connect(demodOpt, SIGNAL(fmEmphSelected(double)), this, SLOT(demodOpt_fmEmphSelected(double)));
     connect(demodOpt, SIGNAL(amDcrToggled(bool)), this, SLOT(demodOpt_amDcrToggled(bool)));
     connect(demodOpt, SIGNAL(cwOffsetChanged(int)), this, SLOT(demodOpt_cwOffsetChanged(int)));
+    connect(demodOpt, SIGNAL(amSyncDcrToggled(bool)), this, SLOT(demodOpt_amSyncDcrToggled(bool)));
+    connect(demodOpt, SIGNAL(amSyncPllBwSelected(float)), this, SLOT(demodOpt_amSyncPllBwSelected(float)));
 
     // AGC options dialog
     agcOpt = new CAgcOptions(this);
@@ -114,6 +111,49 @@ DockRxOpt::DockRxOpt(qint64 filterOffsetRange, QWidget *parent) :
     // Noise blanker options
     nbOpt = new CNbOptions(this);
     connect(nbOpt, SIGNAL(thresholdChanged(int,double)), this, SLOT(nbOpt_thresholdChanged(int,double)));
+
+    /* mode setting shortcuts */
+    QShortcut *mode_off_shortcut = new QShortcut(QKeySequence(Qt::Key_Exclam), this);
+    QShortcut *mode_raw_shortcut = new QShortcut(QKeySequence(Qt::Key_I), this);
+    QShortcut *mode_am_shortcut = new QShortcut(QKeySequence(Qt::Key_A), this);
+    QShortcut *mode_nfm_shortcut = new QShortcut(QKeySequence(Qt::Key_N), this);
+    QShortcut *mode_wfm_mono_shortcut = new QShortcut(QKeySequence(Qt::Key_W), this);
+    QShortcut *mode_wfm_stereo_shortcut = new QShortcut(QKeySequence(Qt::SHIFT + Qt::Key_W), this);
+    QShortcut *mode_lsb_shortcut = new QShortcut(QKeySequence(Qt::Key_S), this);
+    QShortcut *mode_usb_shortcut = new QShortcut(QKeySequence(Qt::SHIFT + Qt::Key_S), this);
+    QShortcut *mode_cwl_shortcut = new QShortcut(QKeySequence(Qt::Key_C), this);
+    QShortcut *mode_cwu_shortcut = new QShortcut(QKeySequence(Qt::SHIFT + Qt::Key_C), this);
+    QShortcut *mode_wfm_oirt_shortcut = new QShortcut(QKeySequence(Qt::Key_O), this);
+    QShortcut *mode_am_sync_shortcut = new QShortcut(QKeySequence(Qt::SHIFT + Qt::Key_A), this);
+
+    QObject::connect(mode_off_shortcut, &QShortcut::activated, this, &DockRxOpt::modeOffShortcut);
+    QObject::connect(mode_raw_shortcut, &QShortcut::activated, this, &DockRxOpt::modeRawShortcut);
+    QObject::connect(mode_am_shortcut, &QShortcut::activated, this, &DockRxOpt::modeAMShortcut);
+    QObject::connect(mode_nfm_shortcut, &QShortcut::activated, this, &DockRxOpt::modeNFMShortcut);
+    QObject::connect(mode_wfm_mono_shortcut, &QShortcut::activated, this, &DockRxOpt::modeWFMmonoShortcut);
+    QObject::connect(mode_wfm_stereo_shortcut, &QShortcut::activated, this, &DockRxOpt::modeWFMstereoShortcut);
+    QObject::connect(mode_lsb_shortcut, &QShortcut::activated, this, &DockRxOpt::modeLSBShortcut);
+    QObject::connect(mode_usb_shortcut, &QShortcut::activated, this, &DockRxOpt::modeUSBShortcut);
+    QObject::connect(mode_cwl_shortcut, &QShortcut::activated, this, &DockRxOpt::modeCWLShortcut);
+    QObject::connect(mode_cwu_shortcut, &QShortcut::activated, this, &DockRxOpt::modeCWUShortcut);
+    QObject::connect(mode_wfm_oirt_shortcut, &QShortcut::activated, this, &DockRxOpt::modeWFMoirtShortcut);
+    QObject::connect(mode_am_sync_shortcut, &QShortcut::activated, this, &DockRxOpt::modeAMsyncShortcut);
+
+    /* squelch shortcuts */
+    QShortcut *squelch_reset_shortcut = new QShortcut(QKeySequence(Qt::Key_QuoteLeft), this);
+    QShortcut *squelch_auto_shortcut = new QShortcut(QKeySequence(Qt::Key_AsciiTilde), this);
+
+    QObject::connect(squelch_reset_shortcut, &QShortcut::activated, this, &DockRxOpt::on_resetSquelchButton_clicked);
+    QObject::connect(squelch_auto_shortcut, &QShortcut::activated, this, &DockRxOpt::on_autoSquelchButton_clicked);
+
+    /* filter width shortcuts */
+    QShortcut *filter_narrow_shortcut = new QShortcut(QKeySequence(Qt::Key_Less), this);
+    QShortcut *filter_normal_shortcut = new QShortcut(QKeySequence(Qt::Key_Period), this);
+    QShortcut *filter_wide_shortcut = new QShortcut(QKeySequence(Qt::Key_Greater), this);
+
+    QObject::connect(filter_narrow_shortcut, &QShortcut::activated, this, &DockRxOpt::filterNarrowShortcut);
+    QObject::connect(filter_normal_shortcut, &QShortcut::activated, this, &DockRxOpt::filterNormalShortcut);
+    QObject::connect(filter_wide_shortcut, &QShortcut::activated, this, &DockRxOpt::filterWideShortcut);
 }
 
 DockRxOpt::~DockRxOpt()
@@ -211,7 +251,7 @@ unsigned int DockRxOpt::filterIdxFromLoHi(int lo, int hi) const
  * @param lo Low cutoff frequency in Hz
  * @param hi High cutoff frequency in Hz.
  *
- * This function will automatically select te "User" preset in the
+ * This function will automatically select the "User" preset in the
  * combo box.
  */
 void DockRxOpt::setFilterParam(int lo, int hi)
@@ -372,9 +412,6 @@ void DockRxOpt::readSettings(QSettings *settings)
     bool    conv_ok;
     int     int_val;
     double  dbl_val;
-
-    bool bool_val = settings->value("gui/fctl_reset_digits", true).toBool();
-    ui->filterFreq->setResetLowerDigits(bool_val);
 
     int_val = settings->value("receiver/cwoffset", 700).toInt(&conv_ok);
     if (conv_ok)
@@ -538,12 +575,22 @@ void DockRxOpt::setRxFreqRange(qint64 min_hz, qint64 max_hz)
     ui->freqSpinBox->blockSignals(false);
 }
 
+void DockRxOpt::setResetLowerDigits(bool enabled)
+{
+    ui->filterFreq->setResetLowerDigits(enabled);
+}
+
+void DockRxOpt::setInvertScrolling(bool enabled)
+{
+    ui->filterFreq->setInvertScrolling(enabled);
+}
+
 /**
  * @brief Channel filter offset has changed
  * @param freq The new filter offset in Hz
  *
  * This slot is activated when a new filter offset has been selected either
- * usig the mouse or using the keyboard.
+ * using the mouse or using the keyboard.
  */
 void DockRxOpt::on_filterFreq_newFrequency(qint64 freq)
 {
@@ -593,6 +640,8 @@ void DockRxOpt::updateDemodOptPage(int demod)
         demodOpt->setCurrentPage(CDemodOptions::PAGE_AM_OPT);
     else if (demod == MODE_CWL || demod == MODE_CWU)
         demodOpt->setCurrentPage(CDemodOptions::PAGE_CW_OPT);
+    else if (demod == MODE_AM_SYNC)
+        demodOpt->setCurrentPage(CDemodOptions::PAGE_AMSYNC_OPT);
     else
         demodOpt->setCurrentPage(CDemodOptions::PAGE_NO_OPT);
 }
@@ -740,6 +789,24 @@ void DockRxOpt::demodOpt_cwOffsetChanged(int offset)
     emit cwOffsetChanged(offset);
 }
 
+/**
+ * @brief AM-Sync DC removal toggled by user.
+ * @param enabled Whether DCR is enabled or not.
+ */
+void DockRxOpt::demodOpt_amSyncDcrToggled(bool enabled)
+{
+    emit amSyncDcrToggled(enabled);
+}
+
+/**
+ * @brief AM-Sync PLL BW changed by user.
+ * @param pll_bw The new PLL BW.
+ */
+void DockRxOpt::demodOpt_amSyncPllBwSelected(float pll_bw)
+{
+    emit amSyncPllBwSelected(pll_bw);
+}
+
 /** Noise blanker 1 button has been toggled. */
 void DockRxOpt::on_nb1Button_toggled(bool checked)
 {
@@ -780,7 +847,7 @@ int DockRxOpt::GetEnumForModulationString(QString param)
     }
     if(iModulation == -1)
     {
-        printf("Modulation '%s' is unknown.\n", param.toStdString().c_str());
+        std::cout << "Modulation '" << param.toStdString() << "' is unknown." << std::endl;
         iModulation = MODE_OFF;
     }
     return iModulation;
@@ -794,4 +861,67 @@ bool DockRxOpt::IsModulationValid(QString strModulation)
 QString DockRxOpt::GetStringForModulationIndex(int iModulationIndex)
 {
     return ModulationStrings[iModulationIndex];
+}
+
+void DockRxOpt::modeOffShortcut() {
+    on_modeSelector_activated(MODE_OFF);
+}
+
+void DockRxOpt::modeRawShortcut() {
+    on_modeSelector_activated(MODE_RAW);
+}
+
+void DockRxOpt::modeAMShortcut() {
+    on_modeSelector_activated(MODE_AM);
+}
+
+void DockRxOpt::modeNFMShortcut() {
+    on_modeSelector_activated(MODE_NFM);
+}
+
+void DockRxOpt::modeWFMmonoShortcut() {
+    on_modeSelector_activated(MODE_WFM_MONO);
+}
+
+void DockRxOpt::modeWFMstereoShortcut() {
+    on_modeSelector_activated(MODE_WFM_STEREO);
+}
+
+void DockRxOpt::modeLSBShortcut() {
+    on_modeSelector_activated(MODE_LSB);
+}
+
+void DockRxOpt::modeUSBShortcut() {
+    on_modeSelector_activated(MODE_USB);
+}
+
+void DockRxOpt::modeCWLShortcut() {
+    on_modeSelector_activated(MODE_CWL);
+}
+
+void DockRxOpt::modeCWUShortcut() {
+    on_modeSelector_activated(MODE_CWU);
+}
+
+void DockRxOpt::modeWFMoirtShortcut() {
+    on_modeSelector_activated(MODE_WFM_STEREO_OIRT);
+}
+
+void DockRxOpt::modeAMsyncShortcut() {
+    on_modeSelector_activated(MODE_AM_SYNC);
+}
+
+void DockRxOpt::filterNarrowShortcut() {
+    setCurrentFilter(FILTER_PRESET_NARROW);
+    on_filterCombo_activated(FILTER_PRESET_NARROW);
+}
+
+void DockRxOpt::filterNormalShortcut() {
+    setCurrentFilter(FILTER_PRESET_NORMAL);
+    on_filterCombo_activated(FILTER_PRESET_NORMAL);
+}
+
+void DockRxOpt::filterWideShortcut() {
+    setCurrentFilter(FILTER_PRESET_WIDE);
+    on_filterCombo_activated(FILTER_PRESET_WIDE);
 }

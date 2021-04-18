@@ -1,7 +1,7 @@
 /* -*- c++ -*- */
 /*
  * Gqrx SDR: Software defined radio receiver powered by GNU Radio and Qt
- *           http://gqrx.dk/
+ *           https://gqrx.dk/
  *
  * Copyright 2012 Alexandru Csete OZ9AEC.
  *
@@ -24,7 +24,7 @@
 #include "receivers/receiver_base.h"
 
 
-static const int MIN_IN = 1;  /* Mininum number of input streams. */
+static const int MIN_IN = 1;  /* Minimum number of input streams. */
 static const int MAX_IN = 1;  /* Maximum number of input streams. */
 static const int MIN_OUT = 2; /* Minimum number of output streams. */
 static const int MAX_OUT = 2; /* Maximum number of output streams. */
@@ -132,6 +132,21 @@ bool receiver_base_cf::has_am()
 void receiver_base_cf::set_am_dcr(bool enabled)
 {
     (void) enabled;
+}
+
+bool receiver_base_cf::has_amsync()
+{
+    return false;
+}
+
+void receiver_base_cf::set_amsync_dcr(bool enabled)
+{
+    (void) enabled;
+}
+
+void receiver_base_cf::set_amsync_pll_bw(float pll_bw)
+{
+    (void) pll_bw;
 }
 
 void receiver_base_cf::get_rds_data(std::string &outbuff, int &num)

@@ -1,7 +1,7 @@
 /* -*- c++ -*- */
 /*
  * Gqrx SDR: Software defined radio receiver powered by GNU Radio and Qt
- *           http://gqrx.dk/
+ *           https://gqrx.dk/
  *
  * Copyright 2013 Christian Lindner DL2VCL, Stefano Leucci.
  *
@@ -47,7 +47,7 @@ DockBookmarks::DockBookmarks(QWidget *parent) :
     // Frequency List
     ui->tableViewFrequencyList->setModel(bookmarksTableModel);
     ui->tableViewFrequencyList->setColumnWidth(BookmarksTableModel::COL_NAME,
-        ui->tableViewFrequencyList->columnWidth(BookmarksTableModel::COL_NAME) * 2);
+    ui->tableViewFrequencyList->columnWidth(BookmarksTableModel::COL_NAME) * 2);
     ui->tableViewFrequencyList->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->tableViewFrequencyList->setSelectionMode(QAbstractItemView::SingleSelection);
     ui->tableViewFrequencyList->installEventFilter(this);
@@ -97,8 +97,8 @@ DockBookmarks::DockBookmarks(QWidget *parent) :
 
 DockBookmarks::~DockBookmarks()
 {
+    delete ui;
     delete bookmarksTableModel;
-    bookmarksTableModel = 0;
 }
 
 void DockBookmarks::activated(const QModelIndex & index)
@@ -239,7 +239,7 @@ void DockBookmarks::changeBookmarkTags(int row, int /*column*/)
     BookmarkInfo& bmi = Bookmarks::Get().getBookmark(iIdx);
 
     // Create and show the Dialog for a new Bookmark.
-    // Write the result into variabe 'tags'.
+    // Write the result into variable 'tags'.
     {
         QDialog dialog(this);
         dialog.setWindowTitle("Change Bookmark Tags");

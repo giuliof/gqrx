@@ -1,7 +1,7 @@
 /* -*- c++ -*- */
 /*
  * Gqrx SDR: Software defined radio receiver powered by GNU Radio and Qt
- *           http://gqrx.dk/
+ *           https://gqrx.dk/
  *
  * Copyright 2012-2013 Alexandru Csete OZ9AEC.
  *
@@ -38,8 +38,13 @@
 class dc_corr_cc;
 class iq_swap_cc;
 
+#if GNURADIO_VERSION < 0x030900
 typedef boost::shared_ptr<dc_corr_cc> dc_corr_cc_sptr;
 typedef boost::shared_ptr<iq_swap_cc> iq_swap_cc_sptr;
+#else
+typedef std::shared_ptr<dc_corr_cc> dc_corr_cc_sptr;
+typedef std::shared_ptr<iq_swap_cc> iq_swap_cc_sptr;
+#endif
 
 /*! \brief Return a shared_ptr to a new instance of dc_corr_cc.
  *  \param sample_rate The sample rate

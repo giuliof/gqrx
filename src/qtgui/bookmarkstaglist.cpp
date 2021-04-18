@@ -1,7 +1,7 @@
 /* -*- c++ -*- */
 /*
  * Gqrx SDR: Software defined radio receiver powered by GNU Radio and Qt
- *           http://gqrx.dk/
+ *           https://gqrx.dk/
  *
  * Copyright 2014 Stefano Leucci, Christian Lindner DL2VCL.
  *
@@ -269,7 +269,7 @@ void BookmarksTagList::AddTag(QString name, Qt::CheckState checkstate, QColor co
     // Column 0
     item = new QTableWidgetItem();
     item->setFlags(Qt::ItemIsEnabled);
-    item->setBackgroundColor(color);
+    item->setBackground(QBrush(color));
     setItem(i, 0, item);
 }
 

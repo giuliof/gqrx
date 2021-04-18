@@ -1,7 +1,7 @@
 /* -*- c++ -*- */
 /*
  * Gqrx SDR: Software defined radio receiver powered by GNU Radio and Qt
- *           http://gqrx.dk/
+ *           https://gqrx.dk/
  *
  * Copyright 2013 Alexandru Csete OZ9AEC.
  *
@@ -48,7 +48,7 @@ public:
 
 private:
     unsigned int d_index;    /*! The index of the audio device (unique for each source/sink). */
-    string  d_name;           /*! The name of the audio device. Used when creating souces/sinks. */
+    string  d_name;           /*! The name of the audio device. Used when creating sources/sinks. */
     string  d_description;    /*! The description of the audio device. */
 };
 

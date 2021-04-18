@@ -3,20 +3,26 @@ cmake_minimum_required(VERSION 3.2)
 # Project name
 project(gqrx)
 set(${PROJECT_NAME}_MAJOR "2")
-set(${PROJECT_NAME}_MINOR "12")
-set(${PROJECT_NAME}_PATCH "1")
-##set(VERSION "${${PROJECT_NAME}_MAJOR}.${${PROJECT_NAME}_MINOR}.${${PROJECT_NAME}_PATCH}")
-##set(VERSION "${${PROJECT_NAME}_MAJOR}.${${PROJECT_NAME}_MINOR}")
-##add_definitions(-DVERSION="${VERSION}")
+set(${PROJECT_NAME}_MINOR "14")
+set(${PROJECT_NAME}_PATCH "4")
+set(IS_RELEASE FALSE)
 
-# development version
-execute_process(
-    COMMAND git describe --long --dirty
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    OUTPUT_VARIABLE GITVERSION
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-add_definitions(-DVERSION="${GITVERSION}")
+if(IS_RELEASE)
+    if(${PROJECT_NAME}_PATCH EQUAL 0)
+        set(VERSION "${${PROJECT_NAME}_MAJOR}.${${PROJECT_NAME}_MINOR}")
+    else()
+        set(VERSION "${${PROJECT_NAME}_MAJOR}.${${PROJECT_NAME}_MINOR}.${${PROJECT_NAME}_PATCH}")
+    endif()
+else()
+    execute_process(
+        COMMAND git describe --long --dirty
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        OUTPUT_VARIABLE VERSION
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+endif()
+add_definitions(-DVERSION="${VERSION}")
+file(WRITE version.txt ${VERSION})
 
 set(PACKAGE ${PROJECT_NAME})
 
@@ -40,11 +46,6 @@ endif()
 
 # Workaround for naming collision with log4cpp for Debug builds
 add_definitions(-DLOG4CPP_FIX_ERROR_COLLISION=1)
-
-# Disable debug outputs in release builds
-if(${CMAKE_BUILD_TYPE} MATCHES "Release" OR ${CMAKE_BUILD_TYPE} MATCHES "RelWithDebInfo")
-    add_definitions(-DQT_NO_DEBUG_OUTPUT)
-endif()
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     # using regular Clang or AppleClang
@@ -106,12 +107,25 @@ if(APPLE AND EXISTS /usr/local/opt/qt5)
     list(APPEND CMAKE_PREFIX_PATH "/usr/local/opt/qt5")
 endif()
 
+if(APPLE AND EXISTS /usr/local/opt/icu4c/lib)
+    # With Homebrew icu4c, `-licudata -licui18n -licuuc`
+    # are required, which reside in /usr/local/opt/icu4c/lib.
+    # See src/CMakeFiles/gqrx.dir/link.txt in the build directory.
+    set(ICU4C_LIBRARY_DIRS "/usr/local/opt/icu4c/lib")
+else()
+    set(ICU4C_LIBRARY_DIRS "")
+endif()
+
 # 3rd Party Dependency Stuff
 find_package(Qt5 COMPONENTS Core Network Widgets Svg REQUIRED)
+include(FindPkgConfig)
 find_package(Gnuradio-osmosdr REQUIRED)
 
 set(GR_REQUIRED_COMPONENTS RUNTIME ANALOG AUDIO BLOCKS DIGITAL FILTER FFT PMT)
 find_package(Gnuradio REQUIRED COMPONENTS analog audio blocks digital filter fft)
+if(Gnuradio_VERSION VERSION_LESS "3.8")
+    find_package(Volk)
+endif()
 
 if(NOT Gnuradio_FOUND)
     message(FATAL_ERROR "GnuRadio Runtime required to compile gqrx")
@@ -131,15 +145,16 @@ math(EXPR GNURADIO_BCD_VERSION
 add_definitions(-DGNURADIO_VERSION=${GNURADIO_BCD_VERSION})
 
 if(Gnuradio_VERSION VERSION_LESS "3.8")
-    find_package(Boost COMPONENTS system program_options REQUIRED)
+    find_package(Boost COMPONENTS system REQUIRED)
 endif()
 
-if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux|FreeBSD")
     if(NOT LINUX_AUDIO_BACKEND)
         set(LINUX_AUDIO_BACKEND Pulseaudio CACHE STRING "Choose the audio backend, options are: Pulseaudio, Portaudio, Gr-audio" FORCE)
     endif()
 
     if(${LINUX_AUDIO_BACKEND} MATCHES "Pulseaudio")
+        message(STATUS "Pulseaudio backend enabled")
         find_package(PulseAudio REQUIRED)
         # there is a defect in the pulse audio cmake file that does not include this library. So we add it here.
         find_library(PULSE-SIMPLE NAMES pulse-simple REQUIRED)
@@ -147,7 +162,12 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
         unset(PORTAUDIO_INCLUDE_DIRS CACHE)
         unset(PORTAUDIO_LIBRARIES CACHE)
     elseif(${LINUX_AUDIO_BACKEND} MATCHES "Portaudio")
-        find_package(Portaudio REQUIRED)
+        message(STATUS "Portaudio backend enabled")
+        if(Gnuradio_VERSION VERSION_LESS "3.8")
+            find_package(Portaudio REQUIRED)
+        else()
+            find_package(PORTAUDIO REQUIRED)
+        endif()
         add_definitions(-DWITH_PORTAUDIO)
         unset(PULSEAUDIO_FOUND CACHE)
         unset(PULSEAUDIO_INCLUDE_DIR CACHE)
@@ -157,6 +177,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
         unset(PULSEAUDIO_INCLUDE_DIR CACHE)
         unset(PULSEAUDIO_MAINLOOP_LIBRARY CACHE)
     elseif(${LINUX_AUDIO_BACKEND} MATCHES "Gr-audio")
+        message(STATUS "Gr-audio backend enabled")
         unset(PULSEAUDIO_FOUND CACHE)
         unset(PULSEAUDIO_INCLUDE_DIR CACHE)
         unset(PULSEAUDIO_LIBRARY CACHE)
@@ -177,7 +198,12 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     endif()
 
     if(${OSX_AUDIO_BACKEND} MATCHES "Portaudio")
-        find_package(Portaudio REQUIRED)
+        message(STATUS "Portaudio backend enabled")
+        if(Gnuradio_VERSION VERSION_LESS "3.8")
+            find_package(Portaudio REQUIRED)
+        else()
+            find_package(PORTAUDIO REQUIRED)
+        endif()
         add_definitions(-DWITH_PORTAUDIO)
         unset(PULSEAUDIO_FOUND CACHE)
         unset(PULSEAUDIO_INCLUDE_DIR CACHE)
@@ -187,6 +213,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
         unset(PULSEAUDIO_INCLUDE_DIR CACHE)
         unset(PULSEAUDIO_MAINLOOP_LIBRARY CACHE)
     elseif(${OSX_AUDIO_BACKEND} MATCHES "Gr-audio")
+        message(STATUS "Gr-audio backend enabled")
         unset(PULSEAUDIO_FOUND CACHE)
         unset(PULSEAUDIO_INCLUDE_DIR CACHE)
         unset(PULSEAUDIO_LIBRARY CACHE)
@@ -225,6 +252,7 @@ include_directories(
 link_directories(
     ${Boost_LIBRARY_DIRS}
     ${GNURADIO_RUNTIME_LIBRARY_DIRS}
+    ${ICU4C_LIBRARY_DIRS}
 )
 
 

@@ -1,7 +1,7 @@
 /* -*- c++ -*- */
 /*
  * Gqrx SDR: Software defined radio receiver powered by GNU Radio and Qt
- *           http://gqrx.dk/
+ *           https://gqrx.dk/
  *
  * Copyright 2012 Alexandru Csete OZ9AEC.
  *
@@ -31,7 +31,11 @@ using namespace std;
 
 class pa_source;
 
+#if GNURADIO_VERSION < 0x030900
 typedef boost::shared_ptr<pa_source> pa_source_sptr;
+#else
+typedef std::shared_ptr<pa_source> pa_source_sptr;
+#endif
 
 pa_source_sptr make_pa_source(const string device_name,
                               int sample_rate,
@@ -63,7 +67,7 @@ public:
 private:
     pa_sample_spec d_ss;           /*! Sample specification. */
     string         d_stream_name;  /*! Descriptive name of the stream. */
-    string         d_app_name;     /*! Descriptive name of the applcation. */
+    string         d_app_name;     /*! Descriptive name of the application. */
     pa_simple     *d_pasrc;        /*! The pulseaudio object. */
 
 };

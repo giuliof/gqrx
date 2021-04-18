@@ -1,7 +1,7 @@
 /* -*- c++ -*- */
 /*
  * Gqrx SDR: Software defined radio receiver powered by GNU Radio and Qt
- *           http://gqrx.dk/
+ *           https://gqrx.dk/
  *
  * Copyright 2011 Alexandru Csete OZ9AEC.
  *
@@ -24,9 +24,10 @@
 #include <gnuradio/io_signature.h>
 #include <gnuradio/filter/firdes.h>
 #include <iostream>
+#include <QDebug>
 #include "dsp/rx_filter.h"
 
-static const int MIN_IN = 1;  /* Mininum number of input streams. */
+static const int MIN_IN = 1;  /* Minimum number of input streams. */
 static const int MAX_IN = 1;  /* Maximum number of input streams. */
 static const int MIN_OUT = 1; /* Minimum number of output streams. */
 static const int MAX_OUT = 1; /* Maximum number of output streams. */
@@ -89,11 +90,9 @@ void rx_filter::set_param(double low, double high, double trans_width)
                                                    d_high + d_cw_offset,
                                                    d_trans_width);
 
-#ifndef QT_NO_DEBUG_OUTPUT
-    std::cout << "Generating taps for new filter   LO:" << d_low
-              << "   HI:" << d_high << " TW:" << d_trans_width
-              << "   Taps: " << d_taps.size() << std::endl;
-#endif
+    qDebug() << "Generating taps for new filter   LO:" << d_low
+             << "  HI:" << d_high << "  TW:" << d_trans_width
+             << "  Taps:" << d_taps.size();
 
     d_bpf->set_taps(d_taps);
 }
@@ -177,4 +176,3 @@ void rx_xlating_filter::set_param(double center, double low, double high, double
     set_offset(center);
     set_param(low, high, trans_width);
 }
-

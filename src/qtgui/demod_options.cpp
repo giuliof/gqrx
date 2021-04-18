@@ -1,7 +1,7 @@
 /* -*- c++ -*- */
 /*
  * Gqrx SDR: Software defined radio receiver powered by GNU Radio and Qt
- *           http://gqrx.dk/
+ *           https://gqrx.dk/
  *
  * Copyright 2011-2013 Alexandru Csete OZ9AEC.
  *
@@ -88,6 +88,42 @@ int maxdev_to_index(float max_dev)
     else
         /* APT 25k */
         return 3;
+}
+
+/* convert between synchronous AM PLL bandwidth and combo index */
+static float pll_bw_from_index(int index)
+{
+    switch(index)
+    {
+    case 0:
+        /* Fast */
+        return 0.01;
+    case 1:
+        /* Medium */
+        return 0.001;
+    case 2:
+        /* Slow */
+        return 0.0001;
+    default:
+        qDebug() << "Invalid AM-Sync PLL BW index: " << index;
+        return 0.001;
+    }
+}
+
+static int pll_bw_to_index(float pll_bw)
+{
+    if (pll_bw < 0.00015)
+        /* Slow */
+        return 2;
+    else if (pll_bw < 0.0015)
+        /* Medium */
+        return 1;
+    else if (pll_bw < 0.015)
+        /* Fast */
+        return 0;
+    else
+        /* Medium */
+        return 1;
 }
 
 CDemodOptions::CDemodOptions(QWidget *parent) :
@@ -183,4 +219,24 @@ void CDemodOptions::on_dcrCheckBox_toggled(bool checked)
 void CDemodOptions::on_cwOffsetSpin_valueChanged(int value)
 {
     emit cwOffsetChanged(value);
+}
+
+void CDemodOptions::on_syncdcrCheckBox_toggled(bool checked)
+{
+    emit amSyncDcrToggled(checked);
+}
+
+void CDemodOptions::setPllBw(float pll_bw)
+{
+    ui->pllBwSelector->setCurrentIndex(pll_bw_to_index(pll_bw));
+}
+
+float CDemodOptions::getPllBw(void) const
+{
+    return pll_bw_from_index(ui->pllBwSelector->currentIndex());
+}
+
+void CDemodOptions::on_pllBwSelector_activated(int index)
+{
+    emit amSyncPllBwSelected(pll_bw_from_index(index));
 }

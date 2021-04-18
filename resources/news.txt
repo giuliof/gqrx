@@ -1,8 +1,103 @@
 
-    2.12.2: In progress...
+    2.15.5: In progress...
+
+       NEW: Added SoapyRemote to AppImage and DMG releases.
+       NEW: Added SoapyPlutoSDR to DMG release.
+     FIXED: Compatibility with case-sensitive filesystems on MacOS.
+
+
+    2.14.4: Released December 28, 2020
+
+       NEW: Many more keyboard shortcuts.
+       NEW: Display filename when recording audio.
+     FIXED: Audio output doesn't work on MacOS Big Sur.
+     FIXED: DC remove button doesn't work when Demod Off mode is selected.
+  IMPROVED: Better demodulation of FM stereo signals.
+
+
+    2.14.3: Released December 9, 2020
+
+     FIXED: Lock button in Audio options dialog is always shaded on MacOS.
+     FIXED: Restored Airspy HF and BladeRF support in MacOS builds.
+     FIXED: Restored frequency tooltips on MacOS.
+     FIXED: Monospace text displayed incorrectly on MacOS.
+  IMPROVED: Better rendering on high-DPI screens.
+
+
+    2.14.2: Released December 3, 2020
+
+       NEW: Added button to lock audio FFT and waterfall ranges.
+     FIXED: Crash when invalid device string is entered.
+     FIXED: Receiver starts unexpectedly when "Enable RDS" is checked.
+     FIXED: Invert scrolling option doesn't apply to audio FFT.
+
+
+    2.14.1: Released November 27, 2020
+
+     FIXED: Hardware retuning when dragging frequency axis with center button.
+     FIXED: Removed non-functional Plot button from I/Q recording dialog.
+     FIXED: Start DSP when Play button in I/Q recording dialog is clicked.
+     FIXED: Tooltip for Rec button in I/Q recording dialog.
+  IMPROVED: More accurate rendering of FFT fill.
+  IMPROVED: Better rendering of amplitude axis.
+  IMPROVED: Allow debug logging to be enabled at runtime.
+
+
+      2.14: Released November 19, 2020
+
+       NEW: Start/stop DSP via remote control.
+       NEW: Device scan button in Configure I/O devices dialog.
+       NEW: Added "Recent settings" menu.
+       NEW: Added synchronous AM demodulator.
+       NEW: Added band plan to bottom of FFT.
+       NEW: Added support for DX cluster.
+       NEW: Added "F" shortcut to select the frequency controller.
+     FIXED: PortAudio detection on MacOS.
+     FIXED: Crash when closing AFSK1200 decoder.
+  IMPROVED: Make axes take precedence over demod box in plotter.
+
+
+    2.13.5: Released November 7, 2020
+
+     FIXED: Set correct buffer size for audio FFT.
+
+
+    2.13.4: Released November 6, 2020
+
+       NEW: Added man page for use by distributions.
+     FIXED: Crash when time span is set and waterfall height is set to 0%.
+     FIXED: Filter width is incorrectly set when demod is off.
+  IMPROVED: Removed Boost.Format dependency.
+
+
+    2.13.3: Released November 1, 2020
+
+     FIXED: Crash when waterfall height is set to 100%.
+  IMPROVED: Removed Boost.Program_options dependency.
+
+
+    2.13.2: Released October 24, 2020
+
+       NEW: Preliminary support for GNU Radio 3.9.
+       NEW: Print UDP configuration.
+       NEW: Viridis color map.
+     FIXED: Loss of precision in the plotter's frequency axis.
+     FIXED: Usability on smaller screen sizes.
+
+
+    2.13.1: Released October 17, 2020
+
+     FIXED: Crash when invalid sample rate is specified.
+     FIXED: Decrease minimum size of FFT Settings panel.
+     FIXED: Typos.
+  IMPROVED: More Airspy HF+ sample rates added.
+
+
+      2.13: Released October 16, 2020
 
        NEW: Stereo option for UDP streaming.
        NEW: Script to generate AppImage.
+       NEW: Allow scroll wheel direction to be inverted.
      FIXED: FM de-emphasis causing audio to be 20 dB quieter than it should be.
      FIXED: FM de-emphasis applied incorrectly in WFM stereo receiver.
      FIXED: Update waterfall time resolution when FFT settings are changed.
@@ -22,6 +117,7 @@
   IMPROVED: Audio waterfall colormap matches I/Q waterfall.
   IMPROVED: Use all available display space for panadapter & waterfall.
   IMPROVED: Updated RDS decoder.
+  IMPROVED: More Airspy HF+ sample rates added.
 
 
     2.12.1: Released January 27, 2020
@@ -261,12 +357,12 @@
      FIXED: Correctly apply initial LNB LO frequency.
      FIXED: Audio output device selection on Mac OS X.
      FIXED: Properly store settings when using Save As function.
-     FIXED: Crash when recording audio whith no rec directory set.
+     FIXED: Crash when recording audio with no rec directory set.
      FIXED: Only allow audio playback while DSP is running.
      FIXED: Ensure DSP is stopped when we exit.
      FIXED: Freeze when switching modes after audio recording.
      FIXED: Toggling "ignore limits" changes frequency.
-     FIXED: Include gqrx.dekstop file.
+     FIXED: Include gqrx.desktop file.
      FIXED: Rename scope.svg to gqrx.svg to avoid confusion.
   IMPROVED: Gqrx can fit on small screens (900x600 pixels).
   IMPROVED: Better color gradient for the waterfall.
@@ -334,7 +430,7 @@
        NEW: Pan & zoom on the pandapter axes.
        NEW: Allow changing FFT size.
      FIXED: Mac OS X compatibility.
-  IMPROVED: Various improvements to the user iterface.
+  IMPROVED: Various improvements to the user interface.
 
 
      2.0.0  Released on July 7, 2012
