@@ -580,6 +580,8 @@
    </property>
    <property name="text">
     <string>Save in JSON</string>
+  </property>
+  </action>
   <action name="actionDX_Cluster">
    <property name="text">
     <string>DX Cluster</string>
